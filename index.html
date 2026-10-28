@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+
+<html lang="zh-Hant">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Instagram 瀏覽紀錄分析器 | IG Analytics</title>
+
+    <!-- Tailwind CSS CDN -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js CDN -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- JSZip CDN -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- FontAwesome CDN -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        body { font-family: 'Inter', sans-serif; }
+
+        .ig-gradient {
+
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+
+        }
+
+        .ig-text-gradient {
+
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+
+            -webkit-background-clip: text;
+
+            -webkit-text-fill-color: transparent;
+
+        }
+
+        /* Custom scrollbar for tables */
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    </style>
+
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+
+
+    <!-- Header -->
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+            <div class="flex items-center space-x-3">
+
+                <div class="w-10 h-10 rounded-xl ig-gradient flex items-center justify-center text-white shadow-md">
+
+                    <i class="fa-brands fa-instagram text-xl"></i>
+
+                </div>
+
+                <div>
+
+                    <h1 class="font-bold text-lg leading-tight ig-text-gradient">IG 瀏覽行為數據分析</h1>
+
+                    <p class="text-xs text-slate-500">Instagram Data Insights & Analytics</p>
+
+                </div>
+
+            </div>
+
+            <div class="flex items-center space-x-2">
+
+                <button onclick="loadDemoData()" class="px-4 py-2 text-xs sm:text-sm font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-xl transition-all flex items-center space-x-2 border border-pink-200 shadow-xs">
+
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+                    <span>載入預設示範數據</span>
+
+                </button>
+
+                <button onclick="exportReport()" id="exportBtn" disabled class="px-4 py-2 text-xs sm:text-sm font-medium text-white bg-slate-300 rounded-xl transition-all flex items-center space-x-2 cursor-not-allowed shadow-xs">
+
+                    <i class="fa-solid fa-download"></i>
+
+                    <span>匯出完整報告</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- Main Content -->
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+
+
+        <!-- Upload & Intro Section -->
+
+        <section id="uploadSection" class="mb-8">
+
+            <div class="bg-white rounded-3xl p-8 shadow-xs border border-slate-200 text-center max-w-2xl mx-auto relative overflow-hidden">
+
+                <div class="absolute -right-12 -top-12 w-40 h-40 bg-pink-50 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="absolute -left-12 -bottom-12 w-40 h-40 bg-purple-50 rounded-full blur-2xl pointer-events-none"></div>
+
+                
+
+                <div class="relative z-10">
+
+                    <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+
+                        <i class="fa-solid fa-file-zipper"></i>
+
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">上傳你的 Instagram 資料壓縮檔</h2>
+
+                    <p class="text-sm text-slate-500 mb-6">支援從 IG 設定下載的標準 ZIP 檔案（如 account_information 或 json 資料夾結構），系統將自動在瀏覽器端安全解析 <code>posts_viewed</code> 紀錄。</p>
+
+
+
+                    <label class="block w-full border-2 border-dashed border-pink-300 hover:border-pink-500 rounded-2xl p-6 cursor-pointer bg-pink-50/50 hover:bg-pink-50/80 transition-all group">
+
+                        <input type="file" id="zipFileInput" accept=".zip" class="hidden" onchange="handleFileUpload(event)">
+
+                        <div class="flex flex-col items-center space-y-2">
+
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-pink-500 group-hover:scale-110 transition-transform"></i>
+
+                            <span class="text-sm font-semibold text-slate-700">點擊此處上傳 ZIP 檔案</span>
+
+                            <span class="text-xs text-slate-400">或直接將檔案拖曳至此（完全在本地運作，安全隱私）</span>
+
+                        </div>
+
+                    </label>
+
+
+
+                    <div id="loadingIndicator" class="hidden mt-6 flex items-center justify-center space-x-3 text-pink-600">
+
+                        <i class="fa-solid fa-spinner fa-spin text-lg"></i>
+
+                        <span class="text-sm font-medium">正在解析龐大資料集，請稍候...</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- Analytics Dashboard (Hidden initially) -->
+
+        <section id="dashboardSection" class="hidden space-y-8">
+
+            
+
+            <!-- Summary Metric Cards -->
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+                <!-- Card 1 -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">不重複瀏覽總筆數</span>
+
+                        <div class="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
+
+                            <i class="fa-solid fa-eye"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricTotalViews">0</div>
+
+                    <p class="text-xs text-slate-400 mt-1">已自動去除重複瀏覽紀錄</p>
+
+                </div>
+
+                <!-- Card 2 -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">獨立帳號總數</span>
+
+                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+
+                            <i class="fa-solid fa-users"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricUniqueAccs">0</div>
+
+                    <p class="text-xs text-slate-400 mt-1">獨立追蹤的粉專與帳號</p>
+
+                </div>
+
+                <!-- Card 3 -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">前 10 大核心帳號佔比</span>
+
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+
+                            <i class="fa-solid fa-bullseye"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricTop10Share">0.0%</div>
+
+                    <p class="text-xs text-slate-400 mt-1">同溫層高度集中指標</p>
+
+                </div>
+
+                <!-- Card 4 -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">運動與表演類比例</span>
+
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+
+                            <i class="fa-solid fa-dumbbell"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricSportShare">0.0%</div>
+
+                    <p class="text-xs text-slate-400 mt-1">運動、球類與表演偏好總和</p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Charts Section -->
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Doughnut Chart -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between">
+
+                    <div>
+
+                        <h3 class="font-bold text-slate-800 text-base mb-1">各主題分類佔比圓餅圖</h3>
+
+                        <p class="text-xs text-slate-400 mb-4">基於去重後的帳號分佈統計</p>
+
+                    </div>
+
+                    <div class="relative w-full h-72 flex items-center justify-center">
+
+                        <canvas id="categoryDoughnutChart"></canvas>
+
+                    </div>
+
+                </div>
+
+                <!-- Bar Chart -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between">
+
+                    <div>
+
+                        <h3 class="font-bold text-slate-800 text-base mb-1">Top 10 瀏覽分佈長條圖</h3>
+
+                        <p class="text-xs text-slate-400 mb-4">前十大帳號的瀏覽權重佔比</p>
+
+                    </div>
+
+                    <div class="relative w-full h-72 flex items-center justify-center">
+
+                        <canvas id="topAccountsBarChart"></canvas>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Tables Section -->
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Top 10 Table -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <div>
+
+                            <h3 class="font-bold text-slate-800 text-base">🏆 Top 10 常用帳號排行榜</h3>
+
+                            <p class="text-xs text-slate-400">曝光頻率最高的前十名帳號</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="overflow-x-auto max-h-80">
+
+                        <table class="w-full text-left border-collapse">
+
+                            <thead>
+
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
+
+                                    <th class="py-3 px-4">排名</th>
+
+                                    <th class="py-3 px-4">帳號名稱</th>
+
+                                    <th class="py-3 px-4 text-right">頻率權重</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="topAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+
+                                <!-- Populated by JS -->
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Category Breakdown Table -->
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <div>
+
+                            <h3 class="font-bold text-slate-800 text-base">📊 主題分類詳細統計</h3>
+
+                            <p class="text-xs text-slate-400">各類別不重複佔比總覽</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="overflow-x-auto max-h-80">
+
+                        <table class="w-full text-left border-collapse">
+
+                            <thead>
+
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
+
+                                    <th class="py-3 px-4">主題分類</th>
+
+                                    <th class="py-3 px-4 text-right">項目數</th>
+
+                                    <th class="py-3 px-4 text-right">百分比 (%)</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="categoryTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+
+                                <!-- Populated by JS -->
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Detailed Accounts Search Table with Category Filter -->
+
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+
+                    <div>
+
+                        <h3 class="font-bold text-slate-800 text-base">🔍 去重後的所有帳號清單</h3>
+
+                        <p class="text-xs text-slate-400">已過濾所有重複紀錄，確保每筆帳號獨立呈現</p>
+
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+
+                        <!-- Category Filter Dropdown -->
+
+                        <div class="w-full sm:w-56">
+
+                            <select id="categoryFilter" onchange="filterTable()" class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors">
+
+                                <option value="all">所有分類 (All Categories)</option>
+
+                                <option value="表演類">表演類</option>
+
+                                <option value="攝影/影像創作類">攝影/影像創作類</option>
+
+                                <option value="運動/健身類">運動/健身類</option>
+
+                                <option value="外貌美妝/穿搭類">外貌美妝/穿搭類</option>
+
+                                <option value="美食/餐飲類">美食/餐飲類</option>
+
+                                <option value="知識/學習/理財類">知識/學習/理財類</option>
+
+                                <option value="娛樂/迷因/生活類">娛樂/迷因/生活類</option>
+
+                                <option value="其他/綜合個人帳號">其他/綜合個人帳號</option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Search Box -->
+
+                        <div class="w-full sm:w-64">
+
+                            <input type="text" id="searchInput" oninput="filterTable()" placeholder="搜尋帳號關鍵字..." class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="overflow-x-auto max-h-96">
+
+                    <table class="w-full text-left border-collapse">
+
+                        <thead>
+
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
+
+                                <th class="py-3 px-4">#</th>
+
+                                <th class="py-3 px-4">帳號名稱</th>
+
+                                <th class="py-3 px-4">智慧分類</th>
+
+                                <th class="py-3 px-4 text-right">瀏覽權重</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="fullAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+
+                            <!-- Populated by JS -->
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+
+        </section>
+
+
+
+    </main>
+
+
+
+    <!-- Footer -->
+
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-400">
+
+        <p>Instagram 瀏覽資料分析網頁應用程式 &copy; 2026 | 已實作完整去重與前端獨立安全解析。</p>
+
+    </footer>
+
+
+
+    <!-- JavaScript Application Logic -->
+
+    <script>
+
+        let globalRawData = []; 
+
+        let globalProcessedData = []; 
+
+        let doughnutChartInstance = null;
+
+        let barChartInstance = null;
+
+
+
+const performanceKeywords = [
+            'cheer', 'cheerleader', 'cheerleaders', 'gofans', 'girls', 'bbcrew', '啦啦隊', '應援', '女孩', 
+            '棒球女孩', 'performance', 'dance', 'dancer', 'show', 'concert', 'stage', 'artist', 'theater', 'idol',
+            '表演', '舞蹈', '舞者', '舞台', '演唱會', '音樂會', '演出', '劇團', '樂團', '藝人', '偶像', '練習生',
+            'passion_sisters', 'rakutengirls', 'fubonangels', 'unigirls', 'dragonbeauties', 'wing_stars','pilots_crew',
+            'cheerdance', 'cheerteam', 'cheerstar', 'cheerlove', 'cheerlife', 'support', 'cheering', 'cheerup', 
+            'cheerqueen', 'fans', 'fandom', 'cheerleaderstyle', 'cheerclub', 'cheeroutfit', 'cheeruniform', 'ballpark', 
+            'cheerleaderfc', 'kpop', 'jpop', 'concerttour', 'musicfestival', 'livemusic', 'liveshow', 'livestream', 
+            'stageperformance', 'dancecover', 'choreography', 'dancerlife', 'danceschool', 'stageoutfit', 'stagedesign', 
+            'redcarpet', 'hallyu', 'trainee', 'debut', '啦啦隊女孩', '啦啦隊員', '應援團', '應援曲', '應援口號', '應援棒', 
+            '應援服', '應援毛巾', '球場應援', '主場應援', '看台', '場邊', '球團', '啦啦隊女神', '啦啦隊應援', '韓籍啦啦隊', 
+            '應援日常', '公演', '街舞', '排舞', '熱舞', '現代舞', '芭蕾', '音樂劇', '舞台劇', '脫口秀', '見面會', '簽名會', 
+            '粉絲見面會', '粉絲團', '後援會', '出道', '練習生日常',
+            'cheercaptain', 'cheerfam', 'cheerers', 'cheergram', 'ballparkgirls', 'stadiumvibe', 'fieldside', 'frontrow',
+            'hidari', 'twinsister', 'cheerleaderoutfit', 'concertnight', 'singledrop', 'fanmeeting', 'highfive',
+            '場邊視角', '應援視角', '球場日常', '女孩日常', '球衣穿搭', '應援小物', '應援手幅', '應援看板', '應援燈牌',
+            '場邊特派', '開球嘉賓', '表演嘉賓', '拼盤演唱會', '音樂祭', 'LiveHouse', '爵士舞', '國標舞', 'Popping',
+            'Locking', 'Hiphop', 'Voguing', '自由舞', '成團', '出道日', '練習日常', '汗水與淚水', '舞台魅力',
+            'breezegirls', 'aimingirls', 'watsonsgirls', 'wingstars', 'anions', 'formosasecute',
+            '小巨蛋', '流行音樂', '獨立音樂', '地下樂團', '街頭藝人', '商演', '拼盤', '簽唱會', '握手會',
+            '特映會', '首映會', '音樂大賽', '舞蹈大賽', '排練室', '聲樂', '合唱團', '管弦樂', '交響樂',
+            '粉絲專頁', '應援曲MV', '站姐', '飯拍', '直拍', '焦點直拍', 'endingfairy', 'Ending妖精',
+            'cheerleaderlife', 'ballparkmagic', 'stadiumenergy', 'cheerleaderdance', 'fandomlove', 'cheerleaderworld', 'cheermood', 'cheerfamlife', 'stagepresence', 'concertvibes', 'musiclover', 'liveperformances', 'dancebattle', 'freestyledance', 'audition', 'traineelife', 'debutalbum',
+            '球場應援曲', '啦啦隊應援舞', '應援大合唱', '場邊花絮', '球員卡', '啦啦隊寫真', '應援應援', '應援毛巾團購', '拼盤商演', '商演活動', '音樂祭演出', 'Live演出', '街頭快閃', '排練日常', '幕後花絮', '出道預告', '練習生生活', '成團出道', '見面會現場'
+        ];
+
+        const photoKeywords = [
+            'photos', 'photo', 'photography', 'photographer', 'lens', 'camera', 'portrait', 'snapshot', 
+            '攝影', '人像', '街拍', '快門', '底片', '底片相機', '鏡頭', '相機', '寫真', '修圖', 'vsco', 'lightroom',
+            'nikon', 'canon', 'sony', 'fujifilm', 'streetphoto', 'photogenics', 'visuals', 'artistic',
+            'photographylovers', 'photogram', 'photooftheday', 'picoftheday', 'snapshotphotography', 'streetphotography', 
+            'streetgram', 'urbanphotography', 'portraitmood', 'portraitpage', 'portraiture', 'candid', 'shutterbug', 
+            'shutter', 'filmcamera', 'analog', '35mm', 'mediumformat', 'lightroompresets', 'vscocam', 'vscofilter', 
+            'colorgrading', 'postprocess', 'bokeh', 'depthoffield', 'telephoto', 'prime', 'zoom', 'flash', 'tripod', 
+            'gimbal', 'dslr', 'mirrorless', 'leica', 'pentax', 'sigma', 'tamron', '街頭攝影', '底片攝影', '膠卷', 
+            '底片相機', '即影即有', '拍立得', '拍立得相機', '長焦鏡頭', '定焦鏡', '廣角鏡', '微距鏡', '快門聲', '光圈', 
+            '快門速度', '感光度', '色調', '調色', '修圖軟體', '人像寫真', '私房寫真', '商務寫真', '街拍日常', '人文街拍', 
+            '隨手拍', '生活切片', '氛圍感', '構圖', '逆光', '夕陽光影',
+            'visualarts', 'cinematic', 'cinematicmood', 'moodygrams', 'agameoftones', 'theimaged', 'streetvision',
+            'streetclassics', 'rawurbanshots', 'portrait_vision', 'earth_portraits', 'expfilm', 'filmisnotdead',
+            'shootermag', 'gramslayers', 'heatercentral', 'hbouthere', 'sonyalpha', 'fujifilmx', 'canonphotography',
+            '街頭人文', '紀實攝影', '底片沖掃', '過期底片', '雙重曝光', '黑白攝影', '光影美學', '構圖技巧', '黃金比例',
+            '三分法', '減法攝影', '底片色調', '日系清新', '電影感色調', '底片質感', '相機包', '腳架', '定焦之王',
+            '大光圈', '散景控', '拍照日常', '底片日記', '膠卷日常', '底片毒藥', '鏡頭蓋',
+            '哈蘇', '萊卡', '底片沖洗', '黑白暗房', '顯影', '定影', '正片', '負片', '即時顯影', '拍立得底片',
+            '減光鏡', '偏光鏡', 'CPL', 'ND鏡', '閃光燈棚拍', '人像燈光', '反光板', '柔光罩', '空拍機', '航拍',
+            '街頭紀實', '建築攝影', '風景攝影', '微距拍攝', '星空攝影', '長曝光', '車軌', '流星雨', '日落攝影',
+            'streetportrait', 'urbanportrait', 'cinematictones', 'moodytones', 'filmphotography', 'grainisgood', 'analogvibes', 'shootfilm', 'thecreatorclass', 'visualgrams', 'artofvisuals', 'tonegrams', 'capturethemoment', 'lensculture', 'streetlife', 'nightphotography', 'longexposure_shots', 'lightandshadow',
+            '底片試鏡', '過期底片測光', '暗房沖洗', '人像特寫', '街頭紀實攝影', '底片相機日常', '膠卷相機', '即時顯影相機', '復古色調', '日系底片', '電影感人像', '光影捕捉', '夜景街拍', '隨手記錄', '捕捉瞬間', '鏡頭下的世界', '景深效果', '定焦鏡散景'
+        ];
+
+        const sportKeywords = [
+            'sport', 'workout', 'gym', 'run', 'tennis', 'badminton', 'billiards', 'basketball', 'football', 'soccer', 
+            'swimming', 'yoga', 'athlete','baseball', '運動', '健身', '桌球', '撞球', '羽球', '籃球', '跑步', '瑜珈', '排球', 
+            '棒球', '球類', '馬拉松', '運動員', '教練','unilions', 'training', 'fitness', 'billiard', 'pingpong', 'cpbl', 'nba',
+            'fitnessmotivation', 'fitnessjourney', 'fitfam', 'workoutroutine', 'gymlife', 'gymrat', 'bodybuilding', 
+            'weightlifting', 'crossfit', 'cardio', 'hiit', 'running', 'runner', 'halfmarathon', 'fullmarathon', 
+            'trailrunning', 'cycling', 'swimmingpool', 'swimmer', 'basketballplayer', 'soccerplayer', 'tennisplayer', 
+            'badmintonplayer', 'athletelife', 'sportswear', 'activewear', 'sportsbra', 'protein', 'supplements', 
+            'recovery', 'stretching', 'foamrolling', '運動生活', '核心訓練', '重量訓練', '肌力訓練', '有氧運動', '無氧運動', 
+            '間歇訓練', '阻力訓練', '徒手健身', '居家健身', '健身房日常', '教練課', '私人教練', '體脂', '肌肉量', '馬拉松跑者', 
+            '全馬', '半馬', '路跑', '夜跑', '晨跑', '單車', '自行車', '三鐵', '游泳', '球拍', '網球拍', '羽球拍', '籃球場', 
+            '排球場', '棒球場', '運動穿搭', '蛋白粉', '運動補給',
+            'gymmotivation', 'gains', 'hypertrophy', 'legday', 'chestday', 'backday', 'shoulders', 'abs', 'corework',
+            'sportstraining', 'stamina', 'endurance', 'billiardlife', 'poolplayer', 'snooker', 'tabletennis', 'pingponglife',
+            'badmintonlovers', 'tennislover', 'basketballgame', 'baseballfan', 'homerun', 'strikeout', 'matchday',
+            '練球', '桌球日常', '撞球日常', '排球日常', '籃球日常', '跑者日常', '核心肌群', '下肢訓練', '上肢訓練',
+            '爆發力', '肌耐力', '柔軟度', '運動傷害', '運動防護', '運動按摩', '筋膜槍', '滾筒放鬆', '運動飲料',
+            'BCAA', '肌酸', '排汗衫', '運動鞋', '慢跑鞋', '籃球鞋', '球場風雲', '熱身操', '收操', '運動打卡',
+            '排球賽', '棒球賽', '足球賽', '世界盃', '奧運', '亞運', '世大運', '全中運', '季後賽', '總冠軍賽',
+            '三振', '安打', '全壘打', '灌籃', '三分球', '越位', '十二碼', '發球', '扣球', '攔網', '瑜珈墊',
+            '壺鈴', '啞鈴', '槓鈴', '引體向上', '深蹲', '硬舉', '臥推', '乳清蛋白', '左旋肉鹼', '運動護具',
+            'workoutmotivation', 'fitnesstips', 'healthylifestyle', 'strengthtraining', 'corestrength', 'runnerlife', 'marathontraining', 'cyclistlife', 'swimmingdrills', 'tennisdrills', 'badmintontime', 'basketballskills', 'baseballlife', 'sportsrecovery', 'proteinshake', 'gymsession', 'fitnessgoals', 'sweatitout',
+            '自主訓練', '核心強化', '有氧燃脂', '無氧重訓', '間歇有氧', '阻力訓練菜單', '居家徒手', '跑者日常訓練', '半馬備戰', '全馬完賽', '單車環島', '羽球場上', '桌球對決', '棒球魂', '運動防護員', '肌肉放鬆', '筋膜放鬆術', '運動營養', '高蛋白飲食', '運動打卡日常'
+        ];
+
+        const beautyKeywords = [
+            'beauty', 'makeup', 'skin', 'fashion', 'outfit', 'wear', 'style', 'dress', 'fit', 'model', 
+            '穿搭', '美妝', '保養', '瘦身', '時尚', '穿著', '配件', '美甲', '髮型', 'ootd', 'cosmetics', 'skincare',
+            'fashionista', 'fashionstyle', 'styleblogger', 'streetstyle', 'chic', 'aesthetic', 'trend', 'trendy', 
+            'lookbook', 'outfitoftheday', 'outfitinspiration', 'wardrobe', 'capsulewardrobe', 'vintage', 'k11', 
+            'highfashion', 'casualstyle', 'minimalist', 'makeupartist', 'makeuplover', 'mua', 'makeuptutorial', 
+            'glowingskin', 'glassskin', 'skincareroutine', 'skincaretips', 'kbeauty', 'jbeauty', 'hairdo', 'hairstyle', 
+            'haircolor', 'nailart', 'manicure', 'pedicure', 'accessories', 'jewelry', 'handbag', '穿搭分享', '穿搭靈感', 
+            '日常穿搭', '簡約穿搭', '韓系穿搭', '美式復古', '日系穿搭', '工裝', '老爹鞋', '精品', '二手衣', '古著', '美妝分享', 
+            '日常妝容', '底妝', '唇彩', '眼影', '保養品', '精華液', '面膜', '防曬', '敏感肌', '美甲設計', '美甲款式', '光療', '染髮', '燙髮', '護髮',
+            'outfitideas', 'styletips', 'dailystyle', 'whatiworetoday', 'todaysoutfit', 'styleinspo', 'instafashion',
+            'fashiongram', 'koreanstyle', 'retrostyle', 'normcore', 'streetwear', 'chicstyle', 'makeuplook', 'dewyskin',
+            'flawlessskin', 'lipgloss', 'eyeliner', 'blush', 'contour', 'hairtransformation', 'haircare', 'gelnails',
+            '穿搭公式', '今天穿這樣', '層次穿搭', '配件搭配', '包包分享', '鞋款開箱', '老帽', '項鍊', '耳環', '戒指',
+            '日常底妝', '定妝噴霧', '修容', '打亮', '腮紅', '唇釉', '水光肌', '霧面唇彩', '指彩', '美甲日常',
+            '洗髮精', '護髮油', '造型品', '捲髮造型', '直髮', '空氣瀏海',
+            '法式優雅', 'Y2K穿搭', '老錢風', '無印風', '大地色系', '同色系穿搭', '多層次穿搭', '寬褲', '短裙',
+            '西裝外套', '針織衫', '風衣', '大衣', '樂福鞋', '馬丁靴', '帆布鞋', '水桶包', '托特包', '腋下包',
+            '眉筆', '眼線液', '睫毛膏', '臥蠶筆', '遮瑕膏', '氣墊粉餅', '蜜粉', '卸妝油', '眼唇卸妝', '導入儀',
+            '美白', '抗老', '保濕', '去角質', '手部保養', '足部保養', '法式美甲', '貓眼美甲', '暈染美甲',
+            'ootdinspo', 'styletrend', 'fashionlook', 'chicoutfit', 'minimaliststyle', 'capsulewardrobe', 'makeupinspo', 'glamlook', 'naturallook', 'skincareroutine', 'glowingskinroutine', 'nailinspo', 'hairgoals', 'hairstyleinspo', 'accessoriesoftheday', 'baglover', 'shoecollection',
+            '穿搭示範', '今天穿搭', '私服穿搭', '穿搭日記', '質感穿搭', '美式復古風', '韓系小姐姐', '日系簡約', '日常保養程序', '妝容分享', '眼妝教學', '唇彩試色', '底妝服貼', '美甲靈感', '光療指甲', '髮型改造', '瀏海整理', '穿搭小技巧', '百搭單品'
+        ];
+
+        const foodKeywords = [
+            'food', 'foodie', 'eat', 'cook', 'cafe', 'bakery', 'dessert', 'yummy', 
+            '美食', '餐廳', '甜點', '吃貨', '咖啡廳', '料理', '食譜', '探店', '下午茶', 'mcdonalds', 'bistro', 'dining',
+            'foodstagram', 'foodblogger', 'foodlover', 'foodgasm', 'instafood', 'eeeeeats', 'nomnom', 'gastronomy', 
+            'homecooking', 'homechef', 'baking', 'homebaking', 'patisserie', 'brunch', 'lunch', 'dinner', 'snack', 
+            'streetfood', 'nightmarket', 'coffeeshop', 'specialtycoffee', 'coffeelover', 'latteart', 'barista', 
+            'izakaya', 'omakase', 'michelin', 'foodiegram', '美食分享', '美食地圖', '必吃', '私房料理', '家常菜', '手作料理', 
+            '烘焙日常', '做菜日常', '早午餐', '下午茶控', '咖啡控', '手沖咖啡', '義式咖啡', '拿鐵拉花', '網美餐廳', '特色咖啡廳', 
+            '質感餐廳', '居酒屋', '無菜單料理', '夜市美食', '小吃', '銅板美食', '甜點控', '千層蛋糕', '肉桂捲', '麵包店', '餐酒館', '聚餐',
+            'foodloverstg', 'foodpics', 'instaeat', 'yummyfood', 'delish', 'feedfeed', 'forkyeah', 'eeeeeatsforyou',
+            'homecooked', 'bakersofinstagram', 'pastrychef', 'sweettooth', 'chocolate', 'caffemocha', 'pourover',
+            'coldbrew', 'gastropub', 'foodphotography', '吃貨日記', '美食雷達', '巷弄美食', '隱藏版美食', '在地小吃',
+            '排隊美食', '網購美食', '伴手禮', '下午茶時光', '甜點巡禮', '咖啡巡禮', '自家烘焙', '手作甜點', '司康',
+            '貝果', '可頌', '生乳卷', '巴斯克', '抹茶控', '芋頭控', '巧克力控', '麥當勞', '速食', '宵夜', '深夜食堂',
+            '麻辣火鍋', '燒肉', '壽司', '拉麵', '咖哩', '義大利麵', '燉飯', '牛排', '早午餐店', '私廚',
+            '夜市小吃', '鹹酥雞', '珍奶', '手搖飲', '珍珠奶茶', '豆花', '冰品', '剉冰', '雞蛋糕', '紅豆餅',
+            '戚風蛋糕', '磅蛋糕', '馬卡龍', '達克瓦茲', '司康控', '肉桂捲控', '酸種麵包', '拿鐵', '美式咖啡', '手沖',
+            '冷萃咖啡', '肯瓊炸雞', '漢堡', '披薩', '墨西哥捲餅', '塔可',
+            'foodiegram', 'foodielife', 'instaeats', 'deliciousfood', 'homebaker', 'bakinglove', 'coffeetime', 'coffeeshopvibes', 'latteartgram', 'brunchtime', 'dinnerideas', 'comfortfood', 'streetfoodlover', 'nightmarketfood', 'michelinguide', 'omakaselover', 'izakayavibes',
+            '吃貨日常', '美食探店', '私廚料理', '手作烘焙坊', '咖啡巡禮', '質感咖啡廳', '拿鐵拉花日常', '手沖咖啡日常', '早午餐時光', '巷弄小吃', '夜市尋寶', '居酒屋小酌', '無菜單饗宴', '米其林推薦', '甜點控日常', '肉桂捲巡禮', '咖啡廳跑咖', '療癒甜點'
+        ];
+
+        const studyKeywords = [
+            'study', 'tips', 'english', 'learn', 'news', 'tech', 'stock', 'invest', 'design', 'code', 'dev', 
+            'flutter', 'python', 'github', '軟體', '工程', '學習', '英文', '理財', '知識', '投資', '程式', 
+            '開發', '資訊', '科技', '筆記', '大學', 'gpa', 'cs', 'software', 'algorithm', 'nknu',
+            'studymotivation', 'studytips', 'studynotes', 'learningeveryday', 'lifelonglearning', 'selfimprovement', 
+            'productivity', 'timeManagement', 'englishlearning', 'vocabulary', 'grammar', 'globalnews', 'economics', 
+            'personalfinance', 'budgeting', 'wealthbuilding', 'stockmarket', 'crypto', 'cryptocurrency', 'webdev', 
+            'frontend', 'backend', 'fullstack', 'javascript', 'typescript', 'react', 'vue', 'angular', 'nodejs', 
+            'docker', 'git', 'machinelearning', 'ai', 'artificialintelligence', 'datascience', 'leetcode', 
+            '學習筆記', '讀書方法', '時間管理', '自我提升', '線上課程', '多益', '雅思', '英文學習', '理財規劃', '存錢', 
+            '被動收入', 'ETF', '美股', '台股', '加密貨幣', '區塊鏈', '軟體工程師', '前端工程師', '後端工程師', '全端', 
+            '資工', '寫程式', '資料結構', '演算法', '人工智慧', '大數據', '機器學習', '開源', '技術筆記',
+            'studyspace', 'desksetup', 'studygram', 'codinglife', 'programmer', 'softwareengineer', 'developerlife',
+            'pythonprogramming', 'flutterdev', 'gitHub', 'vscode', 'htmlcss', 'database', 'sql', 'api', 'backenddev',
+            'frontenddev', 'datastructure', 'competitiveprogramming', 'investmentstrategy', 'dividend', 'passiveincome',
+            '讀書計畫', '期中期末', '高師大', '軟工', '資管', '系所生活', '桌面配置', '鍵盤', '滑鼠', '程式碼',
+            '除錯', '專案開發', '版本控制', '開源專案', '資安', '網頁設計', 'App開發', '行動裝置開發', '理財筆記',
+            '存股', '複利效應', '資產配置', '記帳', '開源節流', '英文口說', '單字卡', '文法解析',
+            'TOEIC', 'IELTS', 'TOEFL', 'JLPT', '日檢', '多益金色證書', '口說練習', '聽力訓練', '寫作指導',
+            '番茄鐘工作法', 'GTD', '時間軸筆記', '心智圖', 'Notion筆記', 'iPad筆記', '電子手帳', '遠端工作',
+            'React Native', 'Swift', 'Kotlin', 'Go', 'Rust', 'Java', 'C++', 'C#', 'MongoDB', 'Redis',
+            'AWS', 'GCP', 'Azure', 'Kubernetes', 'CI/CD', '大盤分析', '技術分析', '基本面分析', '存股心法',
+            'studygrammer', 'studyaesthetic', 'productivityhacks', 'timemanagementtips', 'englishconversation', 'vocabularybuilder', 'codingjourney', 'webdevelopment', 'frontenddevelopment', 'backenddevelopment', 'machinelearningalgorithms', 'artificialintelligenceart', 'datastructuresandalgorithms', 'investmenttips', 'passiveincomestreams', 'stockmarketanalysis',
+            '讀書心得', '筆記分享', 'iPad無紙化筆記', 'Notion工作區', '高效學習法', '多益滿分', '英文寫作', '口說特訓', '程式日常', '前端開發筆記', '後端架構', '演算法練習', 'LeetCode刷題', '人工智慧應用', '資料科學家', '理財新手', '被動收入規劃', '存股日常', '大盤走勢'
+        ];
+
+        const entertainmentKeywords = [
+            'dcard.tw','kaohsiung','meme', 'fun', 'humor', 'joke', 'vlog', 'daily', 'life', 'game', 'tv', 'animation',
+            '迷因', '搞笑', '生活', '娛樂', '日常', '遊戲', '動漫', '廢文', '短片', 'vlogger', 'podcast', 'funniest',
+            'memes', 'dailylife', 'dailyvlog', 'vloglife', 'lifestyle', 'mood', 'relatable', 'funnyvideos', 'comedy', 
+            'humorous', 'gaming', 'gamer', 'gamersofinstagram', 'playstation', 'nintendo', 'xbox', 'steam', 'anime', 
+            'manga', 'animationlover', 'podcastlife', 'podcaster', 'chatting', 'chill', 'relax', 'goodvibes', 
+            '日常紀錄', '生活日常', '生活碎片', '心情', '廢文日常', '笑話', '搞笑短片', '迷因分享', '日常vlog', '生活vlog', 
+            '遊戲實況', '手遊', '家機', '動漫推薦', '新番', '漫畫', '聲優', '廣播', '閒聊', '放鬆', '療癒',
+            'dailymood', 'memesdaily', 'funnymemes', 'lol', 'lmao', 'relatablememes', 'gamingcommunity', 'pcgaming',
+            'indiegames', 'nintendoswitch', 'gamerlife', 'animelover', 'otaku', 'mangaart', 'podcastshow', 'audiobook',
+            'vloggers', 'lifestylevlog', 'chillvibes', 'goodenergy', '生活小品', '日常碎碎念', '心情語錄', '笑死',
+            '迷因梗圖', '網路迷因', '好笑', '舒壓', '療癒小物', '手遊日常', 'Steam遊戲', '單機遊戲', '動漫迷',
+            '動漫周邊', '追番', '聲優控', '播客', '聲音節目', '閒聊日常', '週末放鬆', '充電中',
+            '日常碎念', '心情抒發', '週記', '月記', '生活雜感', '漫步日常', '街頭隨拍', '宅家日常', '耍廢日常',
+            'PS5', 'Switch', '任天堂', '碧藍航線', '原神', '星穹鐵道', '艾爾登法環', '薩爾達傳說', '魔物獵人',
+            '動漫展', 'FF開拓動漫祭', 'CWT', '同人誌', '周邊開箱', '黏土人', '一番賞', '扭蛋', '盲盒', '模型',
+            'dailylifediary', 'vloggerlife', 'lifestyleblogger', 'chillday', 'goodvibesonly', 'gaminglife', 'gamergirl', 'pcgaming101', 'animeworld', 'mangalover', 'otakulife', 'podcastpodcast', 'relaxingtime', 'weekendmood', 'memesdaily', 'funnyreels', 'relatablequotes',
+            '生活碎碎念', '日常紀錄vlog', '週末日常', '耍廢時光', '療癒時刻', '心情小語', '迷因梗圖產生器', '好笑短片', '手遊日常', 'Steam遊戲推薦', '主機遊戲', '動漫追番', '動漫周邊收藏', '聲優控日常', 'Podcast閒聊', '聲音節目日常', '生活雜記'
+        ];
+
+
+        function classifyAccount(accName) {
+
+            if (!accName) return '其他/綜合個人帳號';
+
+            const name = accName.toLowerCase();
+
+            
+
+            if (performanceKeywords.some(k => name.includes(k.toLowerCase()))) return '表演類';
+
+            if (photoKeywords.some(k => name.includes(k.toLowerCase()))) return '攝影/影像創作類';
+
+            if (sportKeywords.some(k => name.includes(k.toLowerCase()))) return '運動/健身類';
+
+            if (beautyKeywords.some(k => name.includes(k.toLowerCase()))) return '外貌美妝/穿搭類';
+
+            if (foodKeywords.some(k => name.includes(k.toLowerCase()))) return '美食/餐飲類';
+
+            if (studyKeywords.some(k => name.includes(k.toLowerCase()))) return '知識/學習/理財類';
+
+            if (entertainmentKeywords.some(k => name.includes(k.toLowerCase()))) return '娛樂/迷因/生活類';
+
+            
+
+            return '其他/綜合個人帳號';
+
+        }
+
+
+
+        // Load Demo Data
+
+        function loadDemoData() {
+
+            const demoAccounts = [
+
+                '5teven___photos', 'hou_fang_fan', 'dance_studio_tw', 'concert_live_tw',
+
+                'fashion_daily', 'outfit_inspirations', 'beauty_secrets', 'makeup_artist_jane', 'daily_vlog_life',
+
+                'foodie_taipei', 'gourmet_hunter', 'cafe_hopping_tw', 'delicious_dessert', 'meme_central_tw',
+
+                'english_learning_tips', 'invest_stock_101', 'tech_news_daily', 'fitness_model_alex', 'gym_workout_pro',
+
+                'table_tennis_lover', 'billiards_master', 'badminton_club_tw', 'running_man_tw', 'personal_blog_john'
+
+            ];
+
+            processAccountsArray(demoAccounts);
+
+        }
+
+
+
+        // Handle ZIP File Upload
+
+        async function handleFileUpload(event) {
+
+            const file = event.target.files[0];
+
+            if (!file) return;
+
+
+
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            loadingIndicator.classList.remove('hidden');
+
+
+
+            try {
+
+                const zip = new JSZip();
+
+                const zipContent = await zip.loadAsync(file);
+
+                let rawAccounts = [];
+
+
+
+                for (let filename of Object.keys(zipContent.files)) {
+
+                    if ((filename.includes('posts_viewed') || filename.includes('viewed')) && filename.endsWith('.json')) {
+
+                        const fileData = await zipContent.files[filename].async('text');
+
+                        try {
+
+                            const data = JSON.parse(fileData);
+
+                            let items = [];
+
+                            if (Array.isArray(data)) {
+
+                                items = data;
+
+                            } else if (typeof data === 'object' && data !== null) {
+
+                                for (let key in data) {
+
+                                    if (Array.isArray(data[key])) {
+
+                                        items = data[key];
+
+                                        break;
+
+                                    }
+
+                                }
+
+                                if (items.length === 0) items = [data];
+
+                            }
+
+
+
+                            for (let item of items) {
+
+                                let acc = item.title || '';
+
+                                if (!acc && item.string_map_data) {
+
+                                    for (let subKey in item.string_map_data) {
+
+                                        if (subKey.toLowerCase().includes('username') || item.string_map_data[subKey].value) {
+
+                                            acc = item.string_map_data[subKey].value || '';
+
+                                            break;
+
+                                        }
+
+                                    }
+
+                                }
+
+                                if (acc) rawAccounts.push(acc.trim());
+
+                            }
+
+                        } catch (err) {
+
+                            console.error(`解析檔案 ${filename} 失敗:`, err);
+
+                        }
+
+                    }
+
+                }
+
+
+
+                loadingIndicator.classList.add('hidden');
+
+
+
+                if (rawAccounts.length === 0) {
+
+                    alert('未能從 ZIP 檔案中找到有效的瀏覽紀錄 JSON 檔案，請確認檔案格式是否正確。');
+
+                } else {
+
+                    processAccountsArray(rawAccounts);
+
+                }
+
+            } catch (error) {
+
+                loadingIndicator.classList.add('hidden');
+
+                console.error(error);
+
+                alert('讀取 ZIP 檔案發生錯誤，請檢查檔案是否完整。');
+
+            }
+
+        }
+
+
+
+        // Process Accounts & Render Dashboard with strict deduplication
+
+        function processAccountsArray(accountsArray) {
+
+            const freqMap = {};
+
+            accountsArray.forEach(acc => {
+
+                const cleanAcc = acc.replace(/^@/, '');
+
+                freqMap[cleanAcc] = (freqMap[cleanAcc] || 0) + 1;
+
+            });
+
+
+
+            // 1. Strict Deduplication: Extract unique accounts
+
+            const uniqueAccountsList = Object.keys(freqMap);
+
+            
+
+            globalRawData = uniqueAccountsList;
+
+            globalProcessedData = uniqueAccountsList.map(acc => ({
+
+                account: acc,
+
+                category: classifyAccount(acc),
+
+                weight: freqMap[acc]
+
+            }));
+
+
+
+            // Sort by frequency weight descending for top ranking
+
+            globalProcessedData.sort((a, b) => b.weight - a.weight);
+
+
+
+            const totalUniqueViews = globalProcessedData.length;
+
+            const uniqueAccs = totalUniqueViews;
+
+
+
+            const sortedAccsByWeight = globalProcessedData.map(d => [d.account, d.weight]);
+
+
+
+            const top10Sum = sortedAccsByWeight.slice(0, 10).reduce((sum, item) => sum + item[1], 0);
+
+            const totalWeightSum = sortedAccsByWeight.reduce((sum, item) => sum + item[1], 0);
+
+            const top10Share = totalWeightSum > 0 ? (top10Sum / totalWeightSum) * 100 : 0;
+
+
+
+            const sportAndPerfCount = globalProcessedData.filter(d => d.category === '運動/健身類' || d.category === '表演類').length;
+
+            const sportRatio = totalUniqueViews > 0 ? (sportAndPerfCount / totalUniqueViews) * 100 : 0;
+
+
+
+            // Update Metric Cards
+
+            document.getElementById('metricTotalViews').innerText = totalUniqueViews.toLocaleString();
+
+            document.getElementById('metricUniqueAccs').innerText = uniqueAccs.toLocaleString();
+
+            document.getElementById('metricTop10Share').innerText = top10Share.toFixed(1) + '%';
+
+            document.getElementById('metricSportShare').innerText = sportRatio.toFixed(1) + '%';
+
+
+
+            // Category counts based on unique items
+
+            const catCounts = {
+
+                '表演類': 0,
+
+                '攝影/影像創作類': 0,
+
+                '運動/健身類': 0,
+
+                '外貌美妝/穿搭類': 0,
+
+                '美食/餐飲類': 0,
+
+                '知識/學習/理財類': 0,
+
+                '娛樂/迷因/生活類': 0,
+
+                '其他/綜合個人帳號': 0
+
+            };
+
+            globalProcessedData.forEach(d => {
+
+                if (catCounts[d.category] !== undefined) {
+
+                    catCounts[d.category]++;
+
+                } else {
+
+                    catCounts['其他/綜合個人帳號']++;
+
+                }
+
+            });
+
+
+
+            // Render Tables
+
+            renderTopAccountsTable(sortedAccsByWeight.slice(0, 10));
+
+            renderCategoryTable(catCounts, totalUniqueViews);
+
+            renderFullTable(globalProcessedData);
+
+
+
+            // Render Charts
+
+            renderCharts(catCounts, sortedAccsByWeight.slice(0, 10));
+
+
+
+            // Show Dashboard & Enable Export
+
+            document.getElementById('uploadSection').classList.add('hidden');
+
+            document.getElementById('dashboardSection').classList.remove('hidden');
+
+            const exportBtn = document.getElementById('exportBtn');
+
+            exportBtn.disabled = false;
+
+            exportBtn.classList.remove('bg-slate-300', 'cursor-not-allowed');
+
+            exportBtn.classList.add('ig-gradient', 'text-white', 'hover:opacity-90', 'shadow-md');
+
+        }
+
+
+
+        // Render Top 10 Accounts Table
+
+        function renderTopAccountsTable(top10) {
+
+            const tbody = document.getElementById('topAccountsTableBody');
+
+            tbody.innerHTML = '';
+
+            top10.forEach((item, index) => {
+
+                const tr = document.createElement('tr');
+
+                tr.className = 'hover:bg-slate-50 transition-colors';
+
+                tr.innerHTML = `
+
+                    <td class="py-3 px-4 font-semibold text-slate-500">#${index + 1}</td>
+
+                    <td class="py-3 px-4 font-medium text-slate-900">@${item[0]}</td>
+
+                    <td class="py-3 px-4 text-right font-semibold text-pink-600">${item[1].toLocaleString()} 次權重</td>
+
+                `;
+
+                tbody.appendChild(tr);
+
+            });
+
+        }
+
+
+
+        // Render Category Breakdown Table
+
+        function renderCategoryTable(catCounts, totalViews) {
+
+            const tbody = document.getElementById('categoryTableBody');
+
+            tbody.innerHTML = '';
+
+            Object.entries(catCounts).forEach(([cat, count]) => {
+
+                const percentage = totalViews > 0 ? ((count / totalViews) * 100).toFixed(2) : 0;
+
+                const tr = document.createElement('tr');
+
+                tr.className = 'hover:bg-slate-50 transition-colors';
+
+                tr.innerHTML = `
+
+                    <td class="py-3 px-4 font-medium text-slate-900 flex items-center space-x-2">
+
+                        <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${getCategoryColor(cat)}"></span>
+
+                        <span>${cat}</span>
+
+                    </td>
+
+                    <td class="py-3 px-4 text-right text-slate-700">${count.toLocaleString()}</td>
+
+                    <td class="py-3 px-4 text-right font-semibold text-slate-900">${percentage}%</td>
+
+                `;
+
+                tbody.appendChild(tr);
+
+            });
+
+        }
+
+
+
+        // Render Full Accounts Searchable Table
+
+        function renderFullTable(data) {
+
+            const tbody = document.getElementById('fullAccountsTableBody');
+
+            tbody.innerHTML = '';
+
+            data.forEach((item, index) => {
+
+                const tr = document.createElement('tr');
+
+                tr.className = 'hover:bg-slate-50 transition-colors';
+
+                tr.innerHTML = `
+
+                    <td class="py-3 px-4 text-slate-400 text-xs">${index + 1}</td>
+
+                    <td class="py-3 px-4 font-medium text-slate-900">@${item.account}</td>
+
+                    <td class="py-3 px-4">
+
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium" style="background-color: ${getCategoryColor(item.category)}20; color: ${getCategoryColor(item.category)}">
+
+                            ${item.category}
+
+                        </span>
+
+                    </td>
+
+                    <td class="py-3 px-4 text-right font-semibold text-slate-600">${item.weight} 次</td>
+
+                `;
+
+                tbody.appendChild(tr);
+
+            });
+
+        }
+
+
+
+        // Filter Table by Category & Search Input
+
+        function filterTable() {
+
+            const selectedCategory = document.getElementById('categoryFilter').value;
+
+            const query = document.getElementById('searchInput').value.toLowerCase();
+
+            
+
+            const filtered = globalProcessedData.filter(d => {
+
+                const matchesCategory = (selectedCategory === 'all' || d.category === selectedCategory);
+
+                const matchesQuery = d.account.toLowerCase().includes(query) || d.category.toLowerCase().includes(query);
+
+                return matchesCategory && matchesQuery;
+
+            });
+
+
+
+            const tbody = document.getElementById('fullAccountsTableBody');
+
+            tbody.innerHTML = '';
+
+            filtered.forEach((item, index) => {
+
+                const tr = document.createElement('tr');
+
+                tr.className = 'hover:bg-slate-50 transition-colors';
+
+                tr.innerHTML = `
+
+                    <td class="py-3 px-4 text-slate-400 text-xs">${index + 1}</td>
+
+                    <td class="py-3 px-4 font-medium text-slate-900">@${item.account}</td>
+
+                    <td class="py-3 px-4">
+
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium" style="background-color: ${getCategoryColor(item.category)}20; color: ${getCategoryColor(item.category)}">
+
+                            ${item.category}
+
+                        </span>
+
+                    </td>
+
+                    <td class="py-3 px-4 text-right font-semibold text-slate-600">${item.weight} 次</td>
+
+                `;
+
+                tbody.appendChild(tr);
+
+            });
+
+        }
+
+
+
+        function getCategoryColor(category) {
+
+            switch(category) {
+
+                case '表演類': return '#ec4899';
+
+                case '攝影/影像創作類': return '#0284c7';
+
+                case '運動/健身類': return '#10b981';
+
+                case '外貌美妝/穿搭類': return '#e1306c';
+
+                case '美食/餐飲類': return '#f09433';
+
+                case '知識/學習/理財類': return '#4f46e5';
+
+                case '娛樂/迷因/生活類': return '#8b5cf6';
+
+                default: return '#64748b';
+
+            }
+
+        }
+
+
+
+        // Render Charts using Chart.js
+
+        function renderCharts(catCounts, top10) {
+
+            const doughnutCtx = document.getElementById('categoryDoughnutChart').getContext('2d');
+
+            if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+
+
+            doughnutChartInstance = new Chart(doughnutCtx, {
+
+                type: 'doughnut',
+
+                data: {
+
+                    labels: Object.keys(catCounts),
+
+                    datasets: [{
+
+                        data: Object.values(catCounts),
+
+                        backgroundColor: [
+
+                            '#ec4899', '#0284c7', '#10b981', '#e1306c', '#f09433', '#4f46e5', '#8b5cf6', '#64748b'
+
+                        ],
+
+                        borderWidth: 2,
+
+                        borderColor: '#ffffff'
+
+                    }]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+
+                            position: 'bottom',
+
+                            labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } }
+
+                        }
+
+                    },
+
+                    cutout: '65%'
+
+                }
+
+            });
+
+
+
+            const barCtx = document.getElementById('topAccountsBarChart').getContext('2d');
+
+            if (barChartInstance) barChartInstance.destroy();
+
+
+
+            barChartInstance = new Chart(barCtx, {
+
+                type: 'bar',
+
+                data: {
+
+                    labels: top10.map(item => '@' + item[0]),
+
+                    datasets: [{
+
+                        label: '瀏覽權重',
+
+                        data: top10.map(item => item[1]),
+
+                        backgroundColor: '#cc2366',
+
+                        borderRadius: 6
+
+                    }]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: { display: false }
+
+                    },
+
+                    scales: {
+
+                        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+
+                        y: { grid: { color: '#f1f3f5' }, ticks: { font: { family: 'Inter', size: 11 } } }
+
+                    }
+
+                }
+
+            });
+
+        }
+
+
+
+        // Export Report Function
+
+        function exportReport() {
+
+            window.print();
+
+        }
+
+    </script>
+
+</body>
+
+</html>
