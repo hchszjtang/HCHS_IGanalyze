@@ -1,562 +1,289 @@
 <!DOCTYPE html>
-
 <html lang="zh-Hant">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>IG瀏覽紀錄分析</title>
-
+    <title>Instagram 數位足跡全方位分析器 (瀏覽/按讚/典藏)</title>
     <!-- Tailwind CSS CDN -->
-
     <script src="https://cdn.tailwindcss.com"></script>
-
     <!-- Chart.js CDN -->
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <!-- JSZip CDN -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
     <!-- FontAwesome CDN -->
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <style>
-
         body { font-family: 'Inter', sans-serif; }
-
         .ig-gradient {
-
             background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-
         }
-
         .ig-text-gradient {
-
             background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-
             -webkit-background-clip: text;
-
             -webkit-text-fill-color: transparent;
-
         }
-
-        /* Custom scrollbar for tables */
-
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
     </style>
-
 </head>
-
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-
-
     <!-- Header -->
-
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
-
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-
             <div class="flex items-center space-x-3">
-
                 <div class="w-10 h-10 rounded-xl ig-gradient flex items-center justify-center text-white shadow-md">
-
                     <i class="fa-brands fa-instagram text-xl"></i>
-
                 </div>
-
                 <div>
-
-                    <h1 class="font-bold text-lg leading-tight ig-text-gradient">IG 瀏覽行為數據分析</h1>
-
-                    <p class="text-xs text-slate-500">Instagram Data Insights & Analytics</p>
-
+                    <h1 class="font-bold text-lg leading-tight ig-text-gradient">IG 全方位足跡分析</h1>
+                    <p class="text-xs text-slate-500">瀏覽 + 按讚 + 典藏/儲存貼文 (Data Insights & Analytics)</p>
                 </div>
-
             </div>
-
             <div class="flex items-center space-x-2">
-
-                <button onclick="loadDemoData()" class="px-4 py-2 text-xs sm:text-sm font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-xl transition-all flex items-center space-x-2 border border-pink-200 shadow-xs">
-
+                <button onclick="resetAnalysis()" id="reanalyzeBtn" class="hidden px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center space-x-2 border border-slate-300 shadow-xs">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>重新分析 / 重新上傳</span>
+                </button>
+                <button onclick="loadDemoData()" id="demoBtn" class="px-4 py-2 text-xs sm:text-sm font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-xl transition-all flex items-center space-x-2 border border-pink-200 shadow-xs">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
-
-                    <span>載入預設示範數據</span>
-
+                    <span>載入示範數據</span>
                 </button>
-
                 <button onclick="exportReport()" id="exportBtn" disabled class="px-4 py-2 text-xs sm:text-sm font-medium text-white bg-slate-300 rounded-xl transition-all flex items-center space-x-2 cursor-not-allowed shadow-xs">
-
                     <i class="fa-solid fa-download"></i>
-
                     <span>匯出完整報告</span>
-
                 </button>
-
             </div>
-
         </div>
-
     </header>
 
-
-
     <!-- Main Content -->
-
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
 
-
-
         <!-- Upload & Intro Section -->
-
         <section id="uploadSection" class="mb-8">
-
             <div class="bg-white rounded-3xl p-8 shadow-xs border border-slate-200 text-center max-w-2xl mx-auto relative overflow-hidden">
-
                 <div class="absolute -right-12 -top-12 w-40 h-40 bg-pink-50 rounded-full blur-2xl pointer-events-none"></div>
-
                 <div class="absolute -left-12 -bottom-12 w-40 h-40 bg-purple-50 rounded-full blur-2xl pointer-events-none"></div>
-
                 
-
                 <div class="relative z-10">
-
                     <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
-
                         <i class="fa-solid fa-file-zipper"></i>
-
                     </div>
-
                     <h2 class="text-xl font-bold text-slate-900 mb-2">上傳你的 Instagram 資料壓縮檔</h2>
-
-                    <p class="text-sm text-slate-500 mb-6">支援從 IG 設定下載的標準 ZIP 檔案（如 account_information 或 json 資料夾結構），系統將自動在瀏覽器端安全解析 <code>posts_viewed</code> 紀錄。</p>
-
-
+                    <p class="text-sm text-slate-500 mb-6">支援包含 <code>posts_viewed</code>（瀏覽）、<code>liked_posts</code>（按讚）與 <code>saved_posts</code>（典藏）等 JSON 的 ZIP 檔案。</p>
 
                     <label class="block w-full border-2 border-dashed border-pink-300 hover:border-pink-500 rounded-2xl p-6 cursor-pointer bg-pink-50/50 hover:bg-pink-50/80 transition-all group">
-
                         <input type="file" id="zipFileInput" accept=".zip" class="hidden" onchange="handleFileUpload(event)">
-
                         <div class="flex flex-col items-center space-y-2">
-
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-pink-500 group-hover:scale-110 transition-transform"></i>
-
                             <span class="text-sm font-semibold text-slate-700">點擊此處上傳 ZIP 檔案</span>
-
-                            <span class="text-xs text-slate-400">或直接將檔案拖曳至此（完全在本地運作，安全隱私）</span>
-
+                            <span class="text-xs text-slate-400">完全在瀏覽器本地端運作，不會上傳伺服器，100% 保護隱私</span>
                         </div>
-
                     </label>
 
-
-
                     <div id="loadingIndicator" class="hidden mt-6 flex items-center justify-center space-x-3 text-pink-600">
-
                         <i class="fa-solid fa-spinner fa-spin text-lg"></i>
-
-                        <span class="text-sm font-medium">正在解析龐大資料集，請稍候...</span>
-
+                        <span class="text-sm font-medium">正在解析瀏覽、按讚與典藏紀錄，請稍候...</span>
                     </div>
-
                 </div>
-
             </div>
-
         </section>
 
-
-
-        <!-- Analytics Dashboard (Hidden initially) -->
-
+        <!-- Analytics Dashboard -->
         <section id="dashboardSection" class="hidden space-y-8">
 
-            
-
-            <!-- Summary Metric Cards -->
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-
-                <!-- Card 1 -->
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
-
-                    <div class="flex items-center justify-between mb-4">
-
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">不重複瀏覽總筆數</span>
-
-                        <div class="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
-
-                            <i class="fa-solid fa-eye"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="text-2xl font-extrabold text-slate-900" id="metricTotalViews">0</div>
-
-                    <p class="text-xs text-slate-400 mt-1">已自動去除重複瀏覽紀錄</p>
-
-                </div>
-
-                <!-- Card 2 -->
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
-
-                    <div class="flex items-center justify-between mb-4">
-
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">獨立帳號總數</span>
-
-                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-
-                            <i class="fa-solid fa-users"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="text-2xl font-extrabold text-slate-900" id="metricUniqueAccs">0</div>
-
-                    <p class="text-xs text-slate-400 mt-1">獨立追蹤的粉專與帳號</p>
-
-                </div>
-
-                <!-- Card 3 -->
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
-
-                    <div class="flex items-center justify-between mb-4">
-
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">前 10 大核心帳號佔比</span>
-
-                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-
-                            <i class="fa-solid fa-bullseye"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="text-2xl font-extrabold text-slate-900" id="metricTop10Share">0.0%</div>
-
-                    <p class="text-xs text-slate-400 mt-1">同溫層高度集中指標</p>
-
-                </div>
-
-                <!-- Card 4 -->
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
-
-                    <div class="flex items-center justify-between mb-4">
-
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">運動與表演類比例</span>
-
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-
-                            <i class="fa-solid fa-dumbbell"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="text-2xl font-extrabold text-slate-900" id="metricSportShare">0.0%</div>
-
-                    <p class="text-xs text-slate-400 mt-1">運動、球類與表演偏好總和</p>
-
-                </div>
-
+            <!-- Data Source Mode Selector Switcher -->
+            <div class="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-2 justify-center sm:justify-start">
+                <button onclick="switchMode('all')" id="btn-mode-all" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all bg-pink-600 text-white shadow-xs">
+                    <i class="fa-solid fa-layer-group mr-1.5"></i> 全部分析 (瀏覽+按讚+典藏)
+                </button>
+                <button onclick="switchMode('views')" id="btn-mode-views" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all">
+                    <i class="fa-solid fa-eye mr-1.5 text-blue-500"></i> 瀏覽紀錄 (Views)
+                </button>
+                <button onclick="switchMode('likes')" id="btn-mode-likes" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all">
+                    <i class="fa-solid fa-heart mr-1.5 text-red-500"></i> 按讚紀錄 (Likes)
+                </button>
+                <button onclick="switchMode('saved')" id="btn-mode-saved" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all">
+                    <i class="fa-solid fa-bookmark mr-1.5 text-amber-500"></i> 典藏紀錄 (Saved)
+                </button>
             </div>
+            
+            <!-- Summary Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">互動總筆數</span>
+                        <div class="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricTotalViews">0</div>
+                    <p class="text-xs text-slate-400 mt-1" id="metricTotalSubtext">當前模式總紀錄數</p>
+                </div>
 
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">獨立帳號總數</span>
+                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricUniqueAccs">0</div>
+                    <p class="text-xs text-slate-400 mt-1">互動過的創作者/粉專</p>
+                </div>
 
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top 10 核心佔比</span>
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricTop10Share">0.0%</div>
+                    <p class="text-xs text-slate-400 mt-1">同溫層高度集中指標</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">按讚與典藏轉換率</span>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <i class="fa-solid fa-fire"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-extrabold text-slate-900" id="metricActionRatio">0.0%</div>
+                    <p class="text-xs text-slate-400 mt-1" id="metricActionSubtext">(按讚+典藏) / 總互動</p>
+                </div>
+            </div>
 
             <!-- Charts Section -->
-
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                <!-- Doughnut Chart -->
-
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between">
-
                     <div>
-
                         <h3 class="font-bold text-slate-800 text-base mb-1">各主題分類佔比圓餅圖</h3>
-
-                        <p class="text-xs text-slate-400 mb-4">基於去重後的帳號分佈統計</p>
-
+                        <p class="text-xs text-slate-400 mb-4">基於當前選取模式下的帳號主題分佈</p>
                     </div>
-
                     <div class="relative w-full h-72 flex items-center justify-center">
-
                         <canvas id="categoryDoughnutChart"></canvas>
-
                     </div>
-
                 </div>
-
-                <!-- Bar Chart -->
-
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between">
-
                     <div>
-
-                        <h3 class="font-bold text-slate-800 text-base mb-1">Top 10 瀏覽分佈長條圖</h3>
-
-                        <p class="text-xs text-slate-400 mb-4">前十大帳號的瀏覽權重佔比</p>
-
+                        <h3 class="font-bold text-slate-800 text-base mb-1">Top 10 互動權重長條圖</h3>
+                        <p class="text-xs text-slate-400 mb-4">前十大帳號的權重數量與分佈</p>
                     </div>
-
                     <div class="relative w-full h-72 flex items-center justify-center">
-
                         <canvas id="topAccountsBarChart"></canvas>
-
                     </div>
-
                 </div>
-
             </div>
-
-
 
             <!-- Tables Section -->
-
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                <!-- Top 10 Table -->
-
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-
-                    <div class="flex items-center justify-between mb-4">
-
-                        <div>
-
-                            <h3 class="font-bold text-slate-800 text-base">🏆 Top 10 常用帳號排行榜</h3>
-
-                            <p class="text-xs text-slate-400">曝光頻率最高的前十名帳號</p>
-
-                        </div>
-
+                    <div class="mb-4">
+                        <h3 class="font-bold text-slate-800 text-base">🏆 Top 10 核心互動帳號</h3>
+                        <p class="text-xs text-slate-400">互動頻率最高的前十名帳號</p>
                     </div>
-
                     <div class="overflow-x-auto max-h-80">
-
                         <table class="w-full text-left border-collapse">
-
                             <thead>
-
                                 <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
-
                                     <th class="py-3 px-4">排名</th>
-
                                     <th class="py-3 px-4">帳號名稱</th>
-
-                                    <th class="py-3 px-4 text-right">頻率權重</th>
-
+                                    <th class="py-3 px-4 text-right">權重計分</th>
                                 </tr>
-
                             </thead>
-
-                            <tbody id="topAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
-
-                                <!-- Populated by JS -->
-
-                            </tbody>
-
+                            <tbody id="topAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
                         </table>
-
                     </div>
-
                 </div>
-
-
-
-                <!-- Category Breakdown Table -->
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-
-                    <div class="flex items-center justify-between mb-4">
-
-                        <div>
-
-                            <h3 class="font-bold text-slate-800 text-base">📊 主題分類詳細統計</h3>
-
-                            <p class="text-xs text-slate-400">各類別不重複佔比總覽</p>
-
-                        </div>
-
+                    <div class="mb-4">
+                        <h3 class="font-bold text-slate-800 text-base">📊 主題分類詳細統計</h3>
+                        <p class="text-xs text-slate-400">各分類權重數與比例</p>
                     </div>
-
                     <div class="overflow-x-auto max-h-80">
-
                         <table class="w-full text-left border-collapse">
-
                             <thead>
-
                                 <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
-
                                     <th class="py-3 px-4">主題分類</th>
-
-                                    <th class="py-3 px-4 text-right">項目數</th>
-
+                                    <th class="py-3 px-4 text-right">數量</th>
                                     <th class="py-3 px-4 text-right">百分比 (%)</th>
-
                                 </tr>
-
                             </thead>
-
-                            <tbody id="categoryTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
-
-                                <!-- Populated by JS -->
-
-                            </tbody>
-
+                            <tbody id="categoryTableBody" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
                         </table>
-
                     </div>
-
                 </div>
-
             </div>
 
-
-
-            <!-- Detailed Accounts Search Table with Category Filter -->
-
+            <!-- Search Table -->
             <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-
                     <div>
-
-                        <h3 class="font-bold text-slate-800 text-base">🔍 去重後的所有帳號清單</h3>
-
-                        <p class="text-xs text-slate-400">已過濾所有重複紀錄，確保每筆帳號獨立呈現</p>
-
+                        <h3 class="font-bold text-slate-800 text-base">🔍 所有帳號互動明細列表</h3>
+                        <p class="text-xs text-slate-400">包含瀏覽、按讚與典藏的詳細互動分解</p>
                     </div>
-
                     <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-
-                        <!-- Category Filter Dropdown -->
-
                         <div class="w-full sm:w-56">
-
-                            <select id="categoryFilter" onchange="filterTable()" class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors">
-
+                            <select id="categoryFilter" onchange="filterTable()" class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500">
                                 <option value="all">所有分類 (All Categories)</option>
-
                                 <option value="表演類">表演類</option>
-
                                 <option value="攝影/影像創作類">攝影/影像創作類</option>
-
                                 <option value="運動/健身類">運動/健身類</option>
-
                                 <option value="外貌美妝/穿搭類">外貌美妝/穿搭類</option>
-
                                 <option value="美食/餐飲類">美食/餐飲類</option>
-
                                 <option value="知識/學習/理財類">知識/學習/理財類</option>
-
                                 <option value="娛樂/迷因/生活類">娛樂/迷因/生活類</option>
-
                                 <option value="其他/綜合個人帳號">其他/綜合個人帳號</option>
-
                             </select>
-
                         </div>
-
-                        <!-- Search Box -->
-
                         <div class="w-full sm:w-64">
-
-                            <input type="text" id="searchInput" oninput="filterTable()" placeholder="搜尋帳號關鍵字..." class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors">
-
+                            <input type="text" id="searchInput" oninput="filterTable()" placeholder="搜尋帳號關鍵字..." class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500">
                         </div>
-
                     </div>
-
                 </div>
-
                 <div class="overflow-x-auto max-h-96">
-
                     <table class="w-full text-left border-collapse">
-
                         <thead>
-
                             <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
-
                                 <th class="py-3 px-4">#</th>
-
                                 <th class="py-3 px-4">帳號名稱</th>
-
                                 <th class="py-3 px-4">智慧分類</th>
-
-                                <th class="py-3 px-4 text-right">瀏覽權重</th>
-
+                                <th class="py-3 px-4 text-center">瀏覽 (View)</th>
+                                <th class="py-3 px-4 text-center">按讚 (Like)</th>
+                                <th class="py-3 px-4 text-center">典藏 (Save)</th>
+                                <th class="py-3 px-4 text-right">總權重</th>
                             </tr>
-
                         </thead>
-
-                        <tbody id="fullAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
-
-                            <!-- Populated by JS -->
-
-                        </tbody>
-
+                        <tbody id="fullAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
                     </table>
-
                 </div>
-
             </div>
-
-
-
         </section>
-
-
-
     </main>
 
-
-
     <!-- Footer -->
-
     <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-400">
-
-        <p>Instagram 瀏覽資料分析網頁應用程式 &copy; 2026 | 已實作完整去重與前端獨立安全解析。</p>
-
+        <p>Instagram 數位足跡全方位分析器 &copy; 2026 | 支援瀏覽、按讚與典藏多維度分析</p>
     </footer>
 
-
-
     <!-- JavaScript Application Logic -->
-
     <script>
-
-        let globalRawData = []; 
-
-        let globalProcessedData = []; 
-
+        // 資料儲存架構：分別記錄 view, like, save
+        let aggregatedData = {}; 
+        let currentMode = 'all'; // 'all', 'views', 'likes', 'saved'
+        let globalProcessedList = [];
         let doughnutChartInstance = null;
-
         let barChartInstance = null;
 
-
-
-const performanceKeywords = [
+        // 使用您提供的完整廣泛關鍵字庫
+        const performanceKeywords = [
             'cheer', 'cheerleader', 'cheerleaders', 'gofans', 'girls', 'bbcrew', '啦啦隊', '應援', '女孩', 
             '棒球女孩', 'performance', 'dance', 'dancer', 'show', 'concert', 'stage', 'artist', 'theater', 'idol',
             '表演', '舞蹈', '舞者', '舞台', '演唱會', '音樂會', '演出', '劇團', '樂團', '藝人', '偶像', '練習生',
@@ -724,665 +451,409 @@ const performanceKeywords = [
             '生活碎碎念', '日常紀錄vlog', '週末日常', '耍廢時光', '療癒時刻', '心情小語', '迷因梗圖產生器', '好笑短片', '手遊日常', 'Steam遊戲推薦', '主機遊戲', '動漫追番', '動漫周邊收藏', '聲優控日常', 'Podcast閒聊', '聲音節目日常', '生活雜記'
         ];
 
+        const keywordDict = {
+            '表演類': performanceKeywords,
+            '攝影/影像創作類': photoKeywords,
+            '運動/健身類': sportKeywords,
+            '外貌美妝/穿搭類': beautyKeywords,
+            '美食/餐飲類': foodKeywords,
+            '知識/學習/理財類': studyKeywords,
+            '娛樂/迷因/生活類': entertainmentKeywords
+        };
 
+        // 智慧分類算法
         function classifyAccount(accName) {
-
             if (!accName) return '其他/綜合個人帳號';
-
             const name = accName.toLowerCase();
-
             
+            let scores = {};
+            for (let [category, keywords] of Object.entries(keywordDict)) {
+                let score = 0;
+                for (let kw of keywords) {
+                    if (name.includes(kw.toLowerCase())) {
+                        score += 1;
+                    }
+                }
+                scores[category] = score;
+            }
 
-            if (performanceKeywords.some(k => name.includes(k.toLowerCase()))) return '表演類';
-
-            if (photoKeywords.some(k => name.includes(k.toLowerCase()))) return '攝影/影像創作類';
-
-            if (sportKeywords.some(k => name.includes(k.toLowerCase()))) return '運動/健身類';
-
-            if (beautyKeywords.some(k => name.includes(k.toLowerCase()))) return '外貌美妝/穿搭類';
-
-            if (foodKeywords.some(k => name.includes(k.toLowerCase()))) return '美食/餐飲類';
-
-            if (studyKeywords.some(k => name.includes(k.toLowerCase()))) return '知識/學習/理財類';
-
-            if (entertainmentKeywords.some(k => name.includes(k.toLowerCase()))) return '娛樂/迷因/生活類';
-
-            
-
-            return '其他/綜合個人帳號';
-
+            let bestCategory = '其他/綜合個人帳號';
+            let maxScore = 0;
+            for (let [category, score] of Object.entries(scores)) {
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestCategory = category;
+                }
+            }
+            return bestCategory;
         }
 
-
-
-        // Load Demo Data
-
+        // 載入測試預設數據
         function loadDemoData() {
+            aggregatedData = {};
+            const demoViews = ['foodie_taipei', 'gourmet_hunter', '5teven___photos', 'dance_studio_tw', 'tech_news_daily', 'foodie_taipei', 'english_learning_tips', 'meme_central_tw'];
+            const demoLikes = ['foodie_taipei', '5teven___photos', 'beauty_secrets', 'outfit_inspirations', 'gym_workout_pro', 'foodie_taipei'];
+            const demoSaved = ['tech_news_daily', 'english_learning_tips', 'invest_stock_101', 'foodie_taipei', 'invest_stock_101'];
 
-            const demoAccounts = [
+            demoViews.forEach(a => recordInteraction(a, 'view'));
+            demoLikes.forEach(a => recordInteraction(a, 'like'));
+            demoSaved.forEach(a => recordInteraction(a, 'save'));
 
-                '5teven___photos', 'hou_fang_fan', 'dance_studio_tw', 'concert_live_tw',
-
-                'fashion_daily', 'outfit_inspirations', 'beauty_secrets', 'makeup_artist_jane', 'daily_vlog_life',
-
-                'foodie_taipei', 'gourmet_hunter', 'cafe_hopping_tw', 'delicious_dessert', 'meme_central_tw',
-
-                'english_learning_tips', 'invest_stock_101', 'tech_news_daily', 'fitness_model_alex', 'gym_workout_pro',
-
-                'table_tennis_lover', 'billiards_master', 'badminton_club_tw', 'running_man_tw', 'personal_blog_john'
-
-            ];
-
-            processAccountsArray(demoAccounts);
-
+            renderDashboard();
         }
 
+        function recordInteraction(accountName, type) {
+            if (!accountName) return;
+            const cleanAcc = accountName.replace(/^@/, '').trim();
+            if (!cleanAcc) return;
 
-
-        // Handle ZIP File Upload
+            if (!aggregatedData[cleanAcc]) {
+                aggregatedData[cleanAcc] = { view: 0, like: 0, save: 0 };
+            }
+            if (aggregatedData[cleanAcc][type] !== undefined) {
+                aggregatedData[cleanAcc][type]++;
+            }
+        }
 
         async function handleFileUpload(event) {
-
             const file = event.target.files[0];
-
             if (!file) return;
 
-
-
             const loadingIndicator = document.getElementById('loadingIndicator');
-
             loadingIndicator.classList.remove('hidden');
 
-
+            aggregatedData = {};
 
             try {
-
                 const zip = new JSZip();
-
                 const zipContent = await zip.loadAsync(file);
 
-                let rawAccounts = [];
-
-
-
                 for (let filename of Object.keys(zipContent.files)) {
+                    if (!filename.endsWith('.json')) continue;
 
-                    if ((filename.includes('posts_viewed') || filename.includes('viewed')) && filename.endsWith('.json')) {
-
-                        const fileData = await zipContent.files[filename].async('text');
-
-                        try {
-
-                            const data = JSON.parse(fileData);
-
-                            let items = [];
-
-                            if (Array.isArray(data)) {
-
-                                items = data;
-
-                            } else if (typeof data === 'object' && data !== null) {
-
-                                for (let key in data) {
-
-                                    if (Array.isArray(data[key])) {
-
-                                        items = data[key];
-
-                                        break;
-
-                                    }
-
-                                }
-
-                                if (items.length === 0) items = [data];
-
-                            }
-
-
-
-                            for (let item of items) {
-
-                                let acc = item.title || '';
-
-                                if (!acc && item.string_map_data) {
-
-                                    for (let subKey in item.string_map_data) {
-
-                                        if (subKey.toLowerCase().includes('username') || item.string_map_data[subKey].value) {
-
-                                            acc = item.string_map_data[subKey].value || '';
-
-                                            break;
-
-                                        }
-
-                                    }
-
-                                }
-
-                                if (acc) rawAccounts.push(acc.trim());
-
-                            }
-
-                        } catch (err) {
-
-                            console.error(`解析檔案 ${filename} 失敗:`, err);
-
-                        }
-
+                    let type = null;
+                    if (filename.includes('posts_viewed') || filename.includes('viewed')) {
+                        type = 'view';
+                    } else if (filename.includes('liked_posts') || filename.includes('likes/liked')) {
+                        type = 'like';
+                    } else if (filename.includes('saved_posts') || filename.includes('saved')) {
+                        type = 'save';
                     }
 
+                    if (type) {
+                        const fileData = await zipContent.files[filename].async('text');
+                        try {
+                            const data = JSON.parse(fileData);
+                            extractAccountsFromJSON(data, type);
+                        } catch (err) {
+                            console.error(`解析檔案 ${filename} 失敗:`, err);
+                        }
+                    }
                 }
-
-
 
                 loadingIndicator.classList.add('hidden');
 
-
-
-                if (rawAccounts.length === 0) {
-
-                    alert('未能從 ZIP 檔案中找到有效的瀏覽紀錄 JSON 檔案，請確認檔案格式是否正確。');
-
+                if (Object.keys(aggregatedData).length === 0) {
+                    alert('未能從 ZIP 檔案中找到有效的瀏覽、按讚或典藏 JSON 檔案。');
                 } else {
-
-                    processAccountsArray(rawAccounts);
-
+                    renderDashboard();
                 }
-
             } catch (error) {
-
                 loadingIndicator.classList.add('hidden');
-
                 console.error(error);
-
-                alert('讀取 ZIP 檔案發生錯誤，請檢查檔案是否完整。');
-
+                alert('讀取 ZIP 檔案發生錯誤，請確認檔案格式。');
             }
-
         }
 
+        function extractAccountsFromJSON(data, type) {
+            let items = [];
+            if (Array.isArray(data)) {
+                items = data;
+            } else if (typeof data === 'object' && data !== null) {
+                for (let key in data) {
+                    if (Array.isArray(data[key])) {
+                        items = data[key];
+                        break;
+                    }
+                }
+                if (items.length === 0) items = [data];
+            }
 
+            for (let item of items) {
+                let acc = item.title || '';
+                
+                // 處理 liked_posts 與 saved_posts 特有結構
+                if (!acc && item.string_list_data && item.string_list_data.length > 0) {
+                    acc = item.string_list_data[0].value || item.string_list_data[0].name || '';
+                }
+                if (!acc && item.string_map_data) {
+                    for (let subKey in item.string_map_data) {
+                        if (subKey.toLowerCase().includes('username') || item.string_map_data[subKey].value) {
+                            acc = item.string_map_data[subKey].value || '';
+                            break;
+                        }
+                    }
+                }
+                
+                if (acc) {
+                    recordInteraction(acc, type);
+                }
+            }
+        }
 
-        // Process Accounts & Render Dashboard with strict deduplication
-
-        function processAccountsArray(accountsArray) {
-
-            const freqMap = {};
-
-            accountsArray.forEach(acc => {
-
-                const cleanAcc = acc.replace(/^@/, '');
-
-                freqMap[cleanAcc] = (freqMap[cleanAcc] || 0) + 1;
-
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // UI Button Styles Update
+            ['all', 'views', 'likes', 'saved'].forEach(m => {
+                const btn = document.getElementById(`btn-mode-${m}`);
+                if (m === mode) {
+                    btn.className = "px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all bg-pink-600 text-white shadow-xs";
+                } else {
+                    btn.className = "px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all";
+                }
             });
 
+            renderDashboard();
+        }
 
+        function renderDashboard() {
+            globalProcessedList = [];
 
-            // 1. Strict Deduplication: Extract unique accounts
+            let totalViews = 0;
+            let totalLikes = 0;
+            let totalSaved = 0;
 
-            const uniqueAccountsList = Object.keys(freqMap);
+            for (let [acc, counts] of Object.entries(aggregatedData)) {
+                totalViews += counts.view;
+                totalLikes += counts.like;
+                totalSaved += counts.save;
 
-            
+                let weight = 0;
+                if (currentMode === 'all') weight = counts.view + counts.like * 2 + counts.save * 3; // 按讚加倍，典藏三倍權重
+                else if (currentMode === 'views') weight = counts.view;
+                else if (currentMode === 'likes') weight = counts.like;
+                else if (currentMode === 'saved') weight = counts.save;
 
-            globalRawData = uniqueAccountsList;
+                if (weight > 0) {
+                    globalProcessedList.push({
+                        account: acc,
+                        category: classifyAccount(acc),
+                        view: counts.view,
+                        like: counts.like,
+                        save: counts.save,
+                        weight: weight
+                    });
+                }
+            }
 
-            globalProcessedData = uniqueAccountsList.map(acc => ({
+            globalProcessedList.sort((a, b) => b.weight - a.weight);
 
-                account: acc,
+            // 指標計算
+            const totalInteractionCount = globalProcessedList.reduce((sum, d) => sum + d.weight, 0);
+            const uniqueAccCount = globalProcessedList.length;
 
-                category: classifyAccount(acc),
+            const top10Sum = globalProcessedList.slice(0, 10).reduce((sum, d) => sum + d.weight, 0);
+            const top10Share = totalInteractionCount > 0 ? (top10Sum / totalInteractionCount) * 100 : 0;
 
-                weight: freqMap[acc]
+            const totalAllEvents = totalViews + totalLikes + totalSaved;
+            const actionRatio = totalAllEvents > 0 ? ((totalLikes + totalSaved) / totalAllEvents) * 100 : 0;
 
-            }));
-
-
-
-            // Sort by frequency weight descending for top ranking
-
-            globalProcessedData.sort((a, b) => b.weight - a.weight);
-
-
-
-            const totalUniqueViews = globalProcessedData.length;
-
-            const uniqueAccs = totalUniqueViews;
-
-
-
-            const sortedAccsByWeight = globalProcessedData.map(d => [d.account, d.weight]);
-
-
-
-            const top10Sum = sortedAccsByWeight.slice(0, 10).reduce((sum, item) => sum + item[1], 0);
-
-            const totalWeightSum = sortedAccsByWeight.reduce((sum, item) => sum + item[1], 0);
-
-            const top10Share = totalWeightSum > 0 ? (top10Sum / totalWeightSum) * 100 : 0;
-
-
-
-            const sportAndPerfCount = globalProcessedData.filter(d => d.category === '運動/健身類' || d.category === '表演類').length;
-
-            const sportRatio = totalUniqueViews > 0 ? (sportAndPerfCount / totalUniqueViews) * 100 : 0;
-
-
-
-            // Update Metric Cards
-
-            document.getElementById('metricTotalViews').innerText = totalUniqueViews.toLocaleString();
-
-            document.getElementById('metricUniqueAccs').innerText = uniqueAccs.toLocaleString();
-
+            document.getElementById('metricTotalViews').innerText = totalInteractionCount.toLocaleString();
+            document.getElementById('metricUniqueAccs').innerText = uniqueAccCount.toLocaleString();
             document.getElementById('metricTop10Share').innerText = top10Share.toFixed(1) + '%';
+            document.getElementById('metricActionRatio').innerText = actionRatio.toFixed(1) + '%';
 
-            document.getElementById('metricSportShare').innerText = sportRatio.toFixed(1) + '%';
-
-
-
-            // Category counts based on unique items
-
+            // 各分類統計
             const catCounts = {
-
-                '表演類': 0,
-
-                '攝影/影像創作類': 0,
-
-                '運動/健身類': 0,
-
-                '外貌美妝/穿搭類': 0,
-
-                '美食/餐飲類': 0,
-
-                '知識/學習/理財類': 0,
-
-                '娛樂/迷因/生活類': 0,
-
-                '其他/綜合個人帳號': 0
-
+                '表演類': 0, '攝影/影像創作類': 0, '運動/健身類': 0,
+                '外貌美妝/穿搭類': 0, '美食/餐飲類': 0, '知識/學習/理財類': 0,
+                '娛樂/迷因/生活類': 0, '其他/綜合個人帳號': 0
             };
 
-            globalProcessedData.forEach(d => {
-
+            globalProcessedList.forEach(d => {
                 if (catCounts[d.category] !== undefined) {
-
-                    catCounts[d.category]++;
-
+                    catCounts[d.category] += d.weight;
                 } else {
-
-                    catCounts['其他/綜合個人帳號']++;
-
+                    catCounts['其他/綜合個人帳號'] += d.weight;
                 }
-
             });
 
-
-
-            // Render Tables
-
-            renderTopAccountsTable(sortedAccsByWeight.slice(0, 10));
-
-            renderCategoryTable(catCounts, totalUniqueViews);
-
-            renderFullTable(globalProcessedData);
-
-
-
-            // Render Charts
-
-            renderCharts(catCounts, sortedAccsByWeight.slice(0, 10));
-
-
-
-            // Show Dashboard & Enable Export
+            renderTopAccountsTable(globalProcessedList.slice(0, 10));
+            renderCategoryTable(catCounts, totalInteractionCount);
+            renderFullTable(globalProcessedList);
+            renderCharts(catCounts, globalProcessedList.slice(0, 10));
 
             document.getElementById('uploadSection').classList.add('hidden');
-
             document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('reanalyzeBtn').classList.remove('hidden');
 
             const exportBtn = document.getElementById('exportBtn');
-
             exportBtn.disabled = false;
-
             exportBtn.classList.remove('bg-slate-300', 'cursor-not-allowed');
-
             exportBtn.classList.add('ig-gradient', 'text-white', 'hover:opacity-90', 'shadow-md');
-
         }
 
+        // 重新分析 / 重置數據與介面
+        function resetAnalysis() {
+            aggregatedData = {};
+            globalProcessedList = [];
+            document.getElementById('zipFileInput').value = '';
 
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('reanalyzeBtn').classList.add('hidden');
+            document.getElementById('uploadSection').classList.remove('hidden');
 
-        // Render Top 10 Accounts Table
+            const exportBtn = document.getElementById('exportBtn');
+            exportBtn.disabled = true;
+            exportBtn.className = 'px-4 py-2 text-xs sm:text-sm font-medium text-white bg-slate-300 rounded-xl transition-all flex items-center space-x-2 cursor-not-allowed shadow-xs';
+        }
 
         function renderTopAccountsTable(top10) {
-
             const tbody = document.getElementById('topAccountsTableBody');
-
             tbody.innerHTML = '';
-
             top10.forEach((item, index) => {
-
                 const tr = document.createElement('tr');
-
                 tr.className = 'hover:bg-slate-50 transition-colors';
-
                 tr.innerHTML = `
-
                     <td class="py-3 px-4 font-semibold text-slate-500">#${index + 1}</td>
-
-                    <td class="py-3 px-4 font-medium text-slate-900">@${item[0]}</td>
-
-                    <td class="py-3 px-4 text-right font-semibold text-pink-600">${item[1].toLocaleString()} 次權重</td>
-
+                    <td class="py-3 px-4 font-medium text-slate-900">@${item.account}</td>
+                    <td class="py-3 px-4 text-right font-semibold text-pink-600">${item.weight.toLocaleString()} 分</td>
                 `;
-
                 tbody.appendChild(tr);
-
             });
-
         }
 
-
-
-        // Render Category Breakdown Table
-
-        function renderCategoryTable(catCounts, totalViews) {
-
+        function renderCategoryTable(catCounts, totalInteractionCount) {
             const tbody = document.getElementById('categoryTableBody');
-
             tbody.innerHTML = '';
-
             Object.entries(catCounts).forEach(([cat, count]) => {
-
-                const percentage = totalViews > 0 ? ((count / totalViews) * 100).toFixed(2) : 0;
-
+                const percentage = totalInteractionCount > 0 ? ((count / totalInteractionCount) * 100).toFixed(2) : 0;
                 const tr = document.createElement('tr');
-
                 tr.className = 'hover:bg-slate-50 transition-colors';
-
                 tr.innerHTML = `
-
                     <td class="py-3 px-4 font-medium text-slate-900 flex items-center space-x-2">
-
                         <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${getCategoryColor(cat)}"></span>
-
                         <span>${cat}</span>
-
                     </td>
-
                     <td class="py-3 px-4 text-right text-slate-700">${count.toLocaleString()}</td>
-
                     <td class="py-3 px-4 text-right font-semibold text-slate-900">${percentage}%</td>
-
                 `;
-
                 tbody.appendChild(tr);
-
             });
-
         }
-
-
-
-        // Render Full Accounts Searchable Table
 
         function renderFullTable(data) {
-
             const tbody = document.getElementById('fullAccountsTableBody');
-
             tbody.innerHTML = '';
-
             data.forEach((item, index) => {
-
                 const tr = document.createElement('tr');
-
                 tr.className = 'hover:bg-slate-50 transition-colors';
-
                 tr.innerHTML = `
-
                     <td class="py-3 px-4 text-slate-400 text-xs">${index + 1}</td>
-
                     <td class="py-3 px-4 font-medium text-slate-900">@${item.account}</td>
-
                     <td class="py-3 px-4">
-
                         <span class="px-2.5 py-1 rounded-full text-xs font-medium" style="background-color: ${getCategoryColor(item.category)}20; color: ${getCategoryColor(item.category)}">
-
                             ${item.category}
-
                         </span>
-
                     </td>
-
-                    <td class="py-3 px-4 text-right font-semibold text-slate-600">${item.weight} 次</td>
-
+                    <td class="py-3 px-4 text-center font-medium text-blue-600">${item.view}</td>
+                    <td class="py-3 px-4 text-center font-medium text-red-500">${item.like}</td>
+                    <td class="py-3 px-4 text-center font-medium text-amber-500">${item.save}</td>
+                    <td class="py-3 px-4 text-right font-semibold text-slate-700">${item.weight}</td>
                 `;
-
                 tbody.appendChild(tr);
-
             });
-
         }
-
-
-
-        // Filter Table by Category & Search Input
 
         function filterTable() {
-
             const selectedCategory = document.getElementById('categoryFilter').value;
-
             const query = document.getElementById('searchInput').value.toLowerCase();
-
             
-
-            const filtered = globalProcessedData.filter(d => {
-
+            const filtered = globalProcessedList.filter(d => {
                 const matchesCategory = (selectedCategory === 'all' || d.category === selectedCategory);
-
                 const matchesQuery = d.account.toLowerCase().includes(query) || d.category.toLowerCase().includes(query);
-
                 return matchesCategory && matchesQuery;
-
             });
 
-
-
-            const tbody = document.getElementById('fullAccountsTableBody');
-
-            tbody.innerHTML = '';
-
-            filtered.forEach((item, index) => {
-
-                const tr = document.createElement('tr');
-
-                tr.className = 'hover:bg-slate-50 transition-colors';
-
-                tr.innerHTML = `
-
-                    <td class="py-3 px-4 text-slate-400 text-xs">${index + 1}</td>
-
-                    <td class="py-3 px-4 font-medium text-slate-900">@${item.account}</td>
-
-                    <td class="py-3 px-4">
-
-                        <span class="px-2.5 py-1 rounded-full text-xs font-medium" style="background-color: ${getCategoryColor(item.category)}20; color: ${getCategoryColor(item.category)}">
-
-                            ${item.category}
-
-                        </span>
-
-                    </td>
-
-                    <td class="py-3 px-4 text-right font-semibold text-slate-600">${item.weight} 次</td>
-
-                `;
-
-                tbody.appendChild(tr);
-
-            });
-
+            renderFullTable(filtered);
         }
-
-
 
         function getCategoryColor(category) {
-
             switch(category) {
-
                 case '表演類': return '#ec4899';
-
                 case '攝影/影像創作類': return '#0284c7';
-
                 case '運動/健身類': return '#10b981';
-
                 case '外貌美妝/穿搭類': return '#e1306c';
-
                 case '美食/餐飲類': return '#f09433';
-
                 case '知識/學習/理財類': return '#4f46e5';
-
                 case '娛樂/迷因/生活類': return '#8b5cf6';
-
                 default: return '#64748b';
-
             }
-
         }
-
-
-
-        // Render Charts using Chart.js
 
         function renderCharts(catCounts, top10) {
-
             const doughnutCtx = document.getElementById('categoryDoughnutChart').getContext('2d');
-
             if (doughnutChartInstance) doughnutChartInstance.destroy();
 
-
-
             doughnutChartInstance = new Chart(doughnutCtx, {
-
                 type: 'doughnut',
-
                 data: {
-
                     labels: Object.keys(catCounts),
-
                     datasets: [{
-
                         data: Object.values(catCounts),
-
-                        backgroundColor: [
-
-                            '#ec4899', '#0284c7', '#10b981', '#e1306c', '#f09433', '#4f46e5', '#8b5cf6', '#64748b'
-
-                        ],
-
+                        backgroundColor: ['#ec4899', '#0284c7', '#10b981', '#e1306c', '#f09433', '#4f46e5', '#8b5cf6', '#64748b'],
                         borderWidth: 2,
-
                         borderColor: '#ffffff'
-
                     }]
-
                 },
-
                 options: {
-
                     responsive: true,
-
                     maintainAspectRatio: false,
-
                     plugins: {
-
-                        legend: {
-
-                            position: 'bottom',
-
-                            labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } }
-
-                        }
-
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } } }
                     },
-
                     cutout: '65%'
-
                 }
-
             });
-
-
 
             const barCtx = document.getElementById('topAccountsBarChart').getContext('2d');
-
             if (barChartInstance) barChartInstance.destroy();
 
-
-
             barChartInstance = new Chart(barCtx, {
-
                 type: 'bar',
-
                 data: {
-
-                    labels: top10.map(item => '@' + item[0]),
-
+                    labels: top10.map(item => '@' + item.account),
                     datasets: [{
-
-                        label: '瀏覽權重',
-
-                        data: top10.map(item => item[1]),
-
+                        label: '權重計分',
+                        data: top10.map(item => item.weight),
                         backgroundColor: '#cc2366',
-
                         borderRadius: 6
-
                     }]
-
                 },
-
                 options: {
-
                     responsive: true,
-
                     maintainAspectRatio: false,
-
-                    plugins: {
-
-                        legend: { display: false }
-
-                    },
-
+                    plugins: { legend: { display: false } },
                     scales: {
-
                         x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
-
                         y: { grid: { color: '#f1f3f5' }, ticks: { font: { family: 'Inter', size: 11 } } }
-
                     }
-
                 }
-
             });
-
         }
-
-
-
-        // Export Report Function
 
         function exportReport() {
-
             window.print();
-
         }
 
+        // 確保全域綁定與事件監聽順序
+        window.handleFileUpload = handleFileUpload;
+        window.resetAnalysis = resetAnalysis;
+        window.loadDemoData = loadDemoData;
+        window.switchMode = switchMode;
+        window.filterTable = filterTable;
+        window.exportReport = exportReport;
     </script>
-
 </body>
-
 </html>
