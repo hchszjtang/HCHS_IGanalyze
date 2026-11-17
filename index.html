@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IG瀏覽記綠分析</title>
+    <title>IG瀏覽紀錄分析 | IG Footprint Analytics | Phân tích Dấu chân IG</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
@@ -33,28 +33,35 @@
 
     <!-- Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-2 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl ig-gradient flex items-center justify-center text-white shadow-md">
+                <div class="w-10 h-10 rounded-xl ig-gradient flex items-center justify-center text-white shadow-md shrink-0">
                     <i class="fa-brands fa-instagram text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight ig-text-gradient">IG 全方位足跡分析</h1>
-                    <p class="text-xs text-slate-500">瀏覽 + 按讚 + 典藏/儲存貼文 (Data Insights & Analytics)</p>
+                    <h1 class="font-bold text-lg leading-tight ig-text-gradient" data-i18n="appTitle">IG 全方位足跡分析</h1>
+                    <p class="text-xs text-slate-500" data-i18n="appSubtitle">瀏覽 + 按讚 + 典藏/儲存貼文 (Data Insights & Analytics)</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Language Switcher -->
+                <div class="inline-flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200" role="group" aria-label="Language Switcher">
+                    <button type="button" onclick="setLanguage('zh')" id="lang-zh" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-pink-600 shadow-xs transition-all">中文</button>
+                    <button type="button" onclick="setLanguage('en')" id="lang-en" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all">EN</button>
+                    <button type="button" onclick="setLanguage('vi')" id="lang-vi" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all">Tiếng Việt</button>
+                </div>
+
                 <button onclick="resetAnalysis()" id="reanalyzeBtn" class="hidden px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center space-x-2 border border-slate-300 shadow-xs">
                     <i class="fa-solid fa-rotate-right"></i>
-                    <span>重新分析 / 重新上傳</span>
+                    <span data-i18n="btnReanalyze">重新分析 / 重新上傳</span>
                 </button>
                 <button onclick="loadDemoData()" id="demoBtn" class="px-4 py-2 text-xs sm:text-sm font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-xl transition-all flex items-center space-x-2 border border-pink-200 shadow-xs">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>載入示範數據</span>
+                    <span data-i18n="btnDemo">載入示範數據</span>
                 </button>
                 <button onclick="exportReport()" id="exportBtn" disabled class="px-4 py-2 text-xs sm:text-sm font-medium text-white bg-slate-300 rounded-xl transition-all flex items-center space-x-2 cursor-not-allowed shadow-xs">
                     <i class="fa-solid fa-download"></i>
-                    <span>匯出完整報告</span>
+                    <span data-i18n="btnExport">匯出完整報告</span>
                 </button>
             </div>
         </div>
@@ -73,21 +80,21 @@
                     <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
                         <i class="fa-solid fa-file-zipper"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-slate-900 mb-2">上傳你的 Instagram 資料壓縮檔</h2>
-                    <p class="text-sm text-slate-500 mb-6">支援包含 <code>posts_viewed</code>（瀏覽）、<code>liked_posts</code>（按讚）與 <code>saved_posts</code>（典藏）等 JSON 的 ZIP 檔案。</p>
+                    <h2 class="text-xl font-bold text-slate-900 mb-2" data-i18n="uploadTitle">上傳你的 Instagram 資料壓縮檔</h2>
+                    <p class="text-sm text-slate-500 mb-6" data-i18n-html="uploadDesc">支援包含 <code>posts_viewed</code>（瀏覽）、<code>liked_posts</code>（按讚）與 <code>saved_posts</code>（典藏）等 JSON 的 ZIP 檔案。</p>
 
                     <label class="block w-full border-2 border-dashed border-pink-300 hover:border-pink-500 rounded-2xl p-6 cursor-pointer bg-pink-50/50 hover:bg-pink-50/80 transition-all group">
                         <input type="file" id="zipFileInput" accept=".zip" class="hidden" onchange="handleFileUpload(event)">
                         <div class="flex flex-col items-center space-y-2">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-pink-500 group-hover:scale-110 transition-transform"></i>
-                            <span class="text-sm font-semibold text-slate-700">點擊此處上傳 ZIP 檔案</span>
-                            <span class="text-xs text-slate-400">完全在瀏覽器本地端運作，不會上傳伺服器，100% 保護隱私</span>
+                            <span class="text-sm font-semibold text-slate-700" data-i18n="uploadDropTitle">點擊此處上傳 ZIP 檔案</span>
+                            <span class="text-xs text-slate-400" data-i18n="uploadPrivacyNote">完全在瀏覽器本地端運作，不會上傳伺服器，100% 保護隱私</span>
                         </div>
                     </label>
 
                     <div id="loadingIndicator" class="hidden mt-6 flex items-center justify-center space-x-3 text-pink-600">
                         <i class="fa-solid fa-spinner fa-spin text-lg"></i>
-                        <span class="text-sm font-medium">正在解析瀏覽、按讚與典藏紀錄，請稍候...</span>
+                        <span class="text-sm font-medium" data-i18n="loadingText">正在解析瀏覽、按讚與典藏紀錄，請稍候...</span>
                     </div>
                 </div>
             </div>
@@ -99,16 +106,16 @@
             <!-- Data Source Mode Selector Switcher -->
             <div class="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-2 justify-center sm:justify-start">
                 <button onclick="switchMode('all')" id="btn-mode-all" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all bg-pink-600 text-white shadow-xs">
-                    <i class="fa-solid fa-layer-group mr-1.5"></i> 全部分析 (瀏覽+按讚+典藏)
+                    <i class="fa-solid fa-layer-group mr-1.5"></i> <span data-i18n="modeAll">全部分析 (瀏覽+按讚+典藏)</span>
                 </button>
                 <button onclick="switchMode('views')" id="btn-mode-views" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all">
-                    <i class="fa-solid fa-eye mr-1.5 text-blue-500"></i> 瀏覽紀錄 (Views)
+                    <i class="fa-solid fa-eye mr-1.5 text-blue-500"></i> <span data-i18n="modeViews">瀏覽紀錄 (Views)</span>
                 </button>
                 <button onclick="switchMode('likes')" id="btn-mode-likes" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all">
-                    <i class="fa-solid fa-heart mr-1.5 text-red-500"></i> 按讚紀錄 (Likes)
+                    <i class="fa-solid fa-heart mr-1.5 text-red-500"></i> <span data-i18n="modeLikes">按讚紀錄 (Likes)</span>
                 </button>
                 <button onclick="switchMode('saved')" id="btn-mode-saved" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all">
-                    <i class="fa-solid fa-bookmark mr-1.5 text-amber-500"></i> 典藏紀錄 (Saved)
+                    <i class="fa-solid fa-bookmark mr-1.5 text-amber-500"></i> <span data-i18n="modeSaved">典藏紀錄 (Saved)</span>
                 </button>
             </div>
             
@@ -116,46 +123,46 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">互動總筆數</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider" data-i18n="metricTotalTitle">互動總筆數</span>
                         <div class="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
                             <i class="fa-solid fa-chart-line"></i>
                         </div>
                     </div>
                     <div class="text-2xl font-extrabold text-slate-900" id="metricTotalViews">0</div>
-                    <p class="text-xs text-slate-400 mt-1" id="metricTotalSubtext">當前模式總紀錄數</p>
+                    <p class="text-xs text-slate-400 mt-1" id="metricTotalSubtext" data-i18n="metricTotalSub">當前模式總紀錄數</p>
                 </div>
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">獨立帳號總數</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider" data-i18n="metricUniqueTitle">獨立帳號總數</span>
                         <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
                             <i class="fa-solid fa-users"></i>
                         </div>
                     </div>
                     <div class="text-2xl font-extrabold text-slate-900" id="metricUniqueAccs">0</div>
-                    <p class="text-xs text-slate-400 mt-1">互動過的創作者/粉專</p>
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="metricUniqueSub">互動過的創作者/粉專</p>
                 </div>
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top 10 核心佔比</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider" data-i18n="metricTop10Title">Top 10 核心佔比</span>
                         <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
                             <i class="fa-solid fa-bullseye"></i>
                         </div>
                     </div>
                     <div class="text-2xl font-extrabold text-slate-900" id="metricTop10Share">0.0%</div>
-                    <p class="text-xs text-slate-400 mt-1">同溫層高度集中指標</p>
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="metricTop10Sub">同溫層高度集中指標</p>
                 </div>
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">按讚與典藏轉換率</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider" data-i18n="metricActionTitle">按讚與典藏轉換率</span>
                         <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                             <i class="fa-solid fa-fire"></i>
                         </div>
                     </div>
                     <div class="text-2xl font-extrabold text-slate-900" id="metricActionRatio">0.0%</div>
-                    <p class="text-xs text-slate-400 mt-1" id="metricActionSubtext">(按讚+典藏) / 總互動</p>
+                    <p class="text-xs text-slate-400 mt-1" id="metricActionSubtext" data-i18n="metricActionSub">(按讚+典藏) / 總互動</p>
                 </div>
             </div>
 
@@ -163,8 +170,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base mb-1">各主題分類佔比圓餅圖</h3>
-                        <p class="text-xs text-slate-400 mb-4">基於當前選取模式下的帳號主題分佈</p>
+                        <h3 class="font-bold text-slate-800 text-base mb-1" data-i18n="chartPieTitle">各主題分類佔比圓餅圖</h3>
+                        <p class="text-xs text-slate-400 mb-4" data-i18n="chartPieSub">基於當前選取模式下的帳號主題分佈</p>
                     </div>
                     <div class="relative w-full h-72 flex items-center justify-center">
                         <canvas id="categoryDoughnutChart"></canvas>
@@ -172,8 +179,8 @@
                 </div>
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base mb-1">Top 10 互動權重長條圖</h3>
-                        <p class="text-xs text-slate-400 mb-4">前十大帳號的權重數量與分佈</p>
+                        <h3 class="font-bold text-slate-800 text-base mb-1" data-i18n="chartBarTitle">Top 10 互動權重長條圖</h3>
+                        <p class="text-xs text-slate-400 mb-4" data-i18n="chartBarSub">前十大帳號的權重數量與分佈</p>
                     </div>
                     <div class="relative w-full h-72 flex items-center justify-center">
                         <canvas id="topAccountsBarChart"></canvas>
@@ -185,16 +192,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
                     <div class="mb-4">
-                        <h3 class="font-bold text-slate-800 text-base">🏆 Top 10 核心互動帳號</h3>
-                        <p class="text-xs text-slate-400">互動頻率最高的前十名帳號</p>
+                        <h3 class="font-bold text-slate-800 text-base" data-i18n="tableTop10Title">🏆 Top 10 核心互動帳號</h3>
+                        <p class="text-xs text-slate-400" data-i18n="tableTop10Sub">互動頻率最高的前十名帳號</p>
                     </div>
                     <div class="overflow-x-auto max-h-80">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
-                                    <th class="py-3 px-4">排名</th>
-                                    <th class="py-3 px-4">帳號名稱</th>
-                                    <th class="py-3 px-4 text-right">權重計分</th>
+                                    <th class="py-3 px-4" data-i18n="colRank">排名</th>
+                                    <th class="py-3 px-4" data-i18n="colAccount">帳號名稱</th>
+                                    <th class="py-3 px-4 text-right" data-i18n="colWeightScore">權重計分</th>
                                 </tr>
                             </thead>
                             <tbody id="topAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
@@ -204,16 +211,16 @@
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
                     <div class="mb-4">
-                        <h3 class="font-bold text-slate-800 text-base">📊 主題分類詳細統計</h3>
-                        <p class="text-xs text-slate-400">各分類權重數與比例</p>
+                        <h3 class="font-bold text-slate-800 text-base" data-i18n="tableCatTitle">📊 主題分類詳細統計</h3>
+                        <p class="text-xs text-slate-400" data-i18n="tableCatSub">各分類權重數與比例</p>
                     </div>
                     <div class="overflow-x-auto max-h-80">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
-                                    <th class="py-3 px-4">主題分類</th>
-                                    <th class="py-3 px-4 text-right">數量</th>
-                                    <th class="py-3 px-4 text-right">百分比 (%)</th>
+                                    <th class="py-3 px-4" data-i18n="colCategory">主題分類</th>
+                                    <th class="py-3 px-4 text-right" data-i18n="colCount">數量</th>
+                                    <th class="py-3 px-4 text-right" data-i18n="colPercent">百分比 (%)</th>
                                 </tr>
                             </thead>
                             <tbody id="categoryTableBody" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
@@ -226,25 +233,25 @@
             <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base">🔍 所有帳號互動明細列表</h3>
-                        <p class="text-xs text-slate-400">包含瀏覽、按讚與典藏的詳細互動分解</p>
+                        <h3 class="font-bold text-slate-800 text-base" data-i18n="tableFullTitle">🔍 所有帳號互動明細列表</h3>
+                        <p class="text-xs text-slate-400" data-i18n="tableFullSub">包含瀏覽、按讚與典藏的詳細互動分解</p>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                         <div class="w-full sm:w-56">
                             <select id="categoryFilter" onchange="filterTable()" class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500">
-                                <option value="all">所有分類 (All Categories)</option>
-                                <option value="表演類">表演類</option>
-                                <option value="攝影/影像創作類">攝影/影像創作類</option>
-                                <option value="運動/健身類">運動/健身類</option>
-                                <option value="外貌美妝/穿搭類">外貌美妝/穿搭類</option>
-                                <option value="美食/餐飲類">美食/餐飲類</option>
-                                <option value="知識/學習/理財類">知識/學習/理財類</option>
-                                <option value="娛樂/迷因/生活類">娛樂/迷因/生活類</option>
-                                <option value="其他/綜合個人帳號">其他/綜合個人帳號</option>
+                                <option value="all" data-i18n="optAllCat">所有分類 (All Categories)</option>
+                                <option value="表演類" data-i18n="catPerf">表演類</option>
+                                <option value="攝影/影像創作類" data-i18n="catPhoto">攝影/影像創作類</option>
+                                <option value="運動/健身類" data-i18n="catSport">運動/健身類</option>
+                                <option value="外貌美妝/穿搭類" data-i18n="catBeauty">外貌美妝/穿搭類</option>
+                                <option value="美食/餐飲類" data-i18n="catFood">美食/餐飲類</option>
+                                <option value="知識/學習/理財類" data-i18n="catStudy">知識/學習/理財類</option>
+                                <option value="娛樂/迷因/生活類" data-i18n="catEnt">娛樂/迷因/生活類</option>
+                                <option value="其他/綜合個人帳號" data-i18n="catOther">其他/綜合個人帳號</option>
                             </select>
                         </div>
                         <div class="w-full sm:w-64">
-                            <input type="text" id="searchInput" oninput="filterTable()" placeholder="搜尋帳號關鍵字..." class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500">
+                            <input type="text" id="searchInput" oninput="filterTable()" data-i18n-placeholder="phSearch" placeholder="搜尋帳號關鍵字..." class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500">
                         </div>
                     </div>
                 </div>
@@ -253,12 +260,12 @@
                         <thead>
                             <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200 sticky top-0">
                                 <th class="py-3 px-4">#</th>
-                                <th class="py-3 px-4">帳號名稱</th>
-                                <th class="py-3 px-4">智慧分類</th>
-                                <th class="py-3 px-4 text-center">瀏覽 (View)</th>
-                                <th class="py-3 px-4 text-center">按讚 (Like)</th>
-                                <th class="py-3 px-4 text-center">典藏 (Save)</th>
-                                <th class="py-3 px-4 text-right">總權重</th>
+                                <th class="py-3 px-4" data-i18n="colAccount">帳號名稱</th>
+                                <th class="py-3 px-4" data-i18n="colSmartCat">智慧分類</th>
+                                <th class="py-3 px-4 text-center" data-i18n="colView">瀏覽 (View)</th>
+                                <th class="py-3 px-4 text-center" data-i18n="colLike">按讚 (Like)</th>
+                                <th class="py-3 px-4 text-center" data-i18n="colSave">典藏 (Save)</th>
+                                <th class="py-3 px-4 text-right" data-i18n="colTotalWeight">總權重</th>
                             </tr>
                         </thead>
                         <tbody id="fullAccountsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
@@ -270,11 +277,258 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-400">
-        <p>Instagram 數位足跡全方位分析器 &copy; 2026 | 支援瀏覽、按讚與典藏多維度分析</p>
+        <p data-i18n="footerText">Instagram 數位足跡全方位分析器 &copy; 2026 | 支援瀏覽、按讚與典藏多維度分析</p>
     </footer>
 
     <!-- JavaScript Application Logic -->
     <script>
+        /* ================= 多國語言字典 (繁體中文 / English / Tiếng Việt) ================= */
+        const i18n = {
+            zh: {
+                htmlLang: "zh-Hant",
+                pageTitle: "IG瀏覽紀錄分析",
+                appTitle: "IG 全方位足跡分析",
+                appSubtitle: "瀏覽 + 按讚 + 典藏/儲存貼文 (Data Insights & Analytics)",
+                btnReanalyze: "重新分析 / 重新上傳",
+                btnDemo: "載入示範數據",
+                btnExport: "匯出完整報告",
+                uploadTitle: "上傳你的 Instagram 資料壓縮檔",
+                uploadDesc: "支援包含 <code>posts_viewed</code>（瀏覽）、<code>liked_posts</code>（按讚）與 <code>saved_posts</code>（典藏）等 JSON 的 ZIP 檔案。",
+                uploadDropTitle: "點擊此處上傳 ZIP 檔案",
+                uploadPrivacyNote: "完全在瀏覽器本地端運作，不會上傳伺服器，100% 保護隱私",
+                loadingText: "正在解析瀏覽、按讚與典藏紀錄，請稍候...",
+                modeAll: "全部分析 (瀏覽+按讚+典藏)",
+                modeViews: "瀏覽紀錄 (Views)",
+                modeLikes: "按讚紀錄 (Likes)",
+                modeSaved: "典藏紀錄 (Saved)",
+                metricTotalTitle: "互動總筆數",
+                metricTotalSub: "當前模式總紀錄數",
+                metricUniqueTitle: "獨立帳號總數",
+                metricUniqueSub: "互動過的創作者/粉專",
+                metricTop10Title: "Top 10 核心佔比",
+                metricTop10Sub: "同溫層高度集中指標",
+                metricActionTitle: "按讚與典藏轉換率",
+                metricActionSub: "(按讚+典藏) / 總互動",
+                chartPieTitle: "各主題分類佔比圓餅圖",
+                chartPieSub: "基於當前選取模式下的帳號主題分佈",
+                chartBarTitle: "Top 10 互動權重長條圖",
+                chartBarSub: "前十大帳號的權重數量與分佈",
+                tableTop10Title: "🏆 Top 10 核心互動帳號",
+                tableTop10Sub: "互動頻率最高的前十名帳號",
+                colRank: "排名",
+                colAccount: "帳號名稱",
+                colWeightScore: "權重計分",
+                tableCatTitle: "📊 主題分類詳細統計",
+                tableCatSub: "各分類權重數與比例",
+                colCategory: "主題分類",
+                colCount: "數量",
+                colPercent: "百分比 (%)",
+                tableFullTitle: "🔍 所有帳號互動明細列表",
+                tableFullSub: "包含瀏覽、按讚與典藏的詳細互動分解",
+                optAllCat: "所有分類 (All Categories)",
+                catPerf: "表演類",
+                catPhoto: "攝影/影像創作類",
+                catSport: "運動/健身類",
+                catBeauty: "外貌美妝/穿搭類",
+                catFood: "美食/餐飲類",
+                catStudy: "知識/學習/理財類",
+                catEnt: "娛樂/迷因/生活類",
+                catOther: "其他/綜合個人帳號",
+                phSearch: "搜尋帳號關鍵字...",
+                colSmartCat: "智慧分類",
+                colView: "瀏覽 (View)",
+                colLike: "按讚 (Like)",
+                colSave: "典藏 (Save)",
+                colTotalWeight: "總權重",
+                footerText: "Instagram 數位足跡全方位分析器 © 2026 | 支援瀏覽、按讚與典藏多維度分析",
+                scoreUnit: " 分",
+                alertNoValidJson: "未能從 ZIP 檔案中找到有效的瀏覽、按讚或典藏 JSON 檔案。",
+                alertZipError: "讀取 ZIP 檔案發生錯誤，請確認檔案格式。"
+            },
+            en: {
+                htmlLang: "en",
+                pageTitle: "IG Footprint & Browsing Analytics",
+                appTitle: "IG Comprehensive Footprint Analytics",
+                appSubtitle: "Views + Likes + Saved Posts (Data Insights & Analytics)",
+                btnReanalyze: "Re-analyze / Re-upload",
+                btnDemo: "Load Demo Data",
+                btnExport: "Export Full Report",
+                uploadTitle: "Upload Your Instagram Data ZIP Archive",
+                uploadDesc: "Supports ZIP archives containing JSON files such as <code>posts_viewed</code> (Views), <code>liked_posts</code> (Likes), and <code>saved_posts</code> (Saved).",
+                uploadDropTitle: "Click Here to Upload ZIP File",
+                uploadPrivacyNote: "Runs 100% locally in your browser without uploading to any server — complete privacy protection.",
+                loadingText: "Parsing viewed, liked, and saved records, please wait...",
+                modeAll: "All Analytics (Views + Likes + Saved)",
+                modeViews: "Viewed Posts (Views)",
+                modeLikes: "Liked Posts (Likes)",
+                modeSaved: "Saved Posts (Saved)",
+                metricTotalTitle: "Total Interactions",
+                metricTotalSub: "Total weighted records in current mode",
+                metricUniqueTitle: "Unique Accounts",
+                metricUniqueSub: "Creators & pages interacted with",
+                metricTop10Title: "Top 10 Core Share",
+                metricTop10Sub: "Echo chamber concentration index",
+                metricActionTitle: "Like & Save Conversion",
+                metricActionSub: "(Likes + Saved) / Total Interactions",
+                chartPieTitle: "Topic Category Distribution (Pie Chart)",
+                chartPieSub: "Account topic breakdown based on the currently selected mode",
+                chartBarTitle: "Top 10 Interaction Weights (Bar Chart)",
+                chartBarSub: "Weighted scores and distribution of your top 10 accounts",
+                tableTop10Title: "🏆 Top 10 Core Interacted Accounts",
+                tableTop10Sub: "Top 10 accounts with the highest interaction frequency",
+                colRank: "Rank",
+                colAccount: "Account",
+                colWeightScore: "Weighted Score",
+                tableCatTitle: "📊 Detailed Topic Category Statistics",
+                tableCatSub: "Weighted count and percentage per category",
+                colCategory: "Topic Category",
+                colCount: "Count",
+                colPercent: "Percentage (%)",
+                tableFullTitle: "🔍 Full Account Interaction Breakdown",
+                tableFullSub: "Detailed breakdown of views, likes, and saves per account",
+                optAllCat: "All Categories",
+                catPerf: "Performance & Cheerleading",
+                catPhoto: "Photography & Visual Arts",
+                catSport: "Sports & Fitness",
+                catBeauty: "Beauty, Makeup & Fashion",
+                catFood: "Food & Dining",
+                catStudy: "Knowledge, Learning & Finance",
+                catEnt: "Entertainment, Memes & Lifestyle",
+                catOther: "Other / General Personal Accounts",
+                phSearch: "Search account keywords...",
+                colSmartCat: "Smart Category",
+                colView: "Views",
+                colLike: "Likes",
+                colSave: "Saved",
+                colTotalWeight: "Total Weight",
+                footerText: "Instagram Comprehensive Digital Footprint Analyzer © 2026 | Multi-dimensional Views, Likes & Saved Analytics",
+                scoreUnit: " pts",
+                alertNoValidJson: "No valid viewed, liked, or saved JSON files were found in the ZIP archive.",
+                alertZipError: "An error occurred while reading the ZIP file. Please verify the file format."
+            },
+            vi: {
+                htmlLang: "vi",
+                pageTitle: "Phân tích Lịch sử & Dấu chân Instagram",
+                appTitle: "Phân tích Toàn diện Dấu chân IG",
+                appSubtitle: "Lượt xem + Lượt thích + Bài viết đã lưu (Data Insights & Analytics)",
+                btnReanalyze: "Phân tích lại / Tải lên lại",
+                btnDemo: "Tải dữ liệu mẫu",
+                btnExport: "Xuất báo cáo đầy đủ",
+                uploadTitle: "Tải lên tệp nén dữ liệu Instagram (ZIP) của bạn",
+                uploadDesc: "Hỗ trợ tệp ZIP chứa các tệp JSON như <code>posts_viewed</code> (Lượt xem), <code>liked_posts</code> (Lượt thích) và <code>saved_posts</code> (Đã lưu).",
+                uploadDropTitle: "Nhấn vào đây để tải lên tệp ZIP",
+                uploadPrivacyNote: "Hoạt động hoàn toàn cục bộ trên trình duyệt, không tải lên máy chủ, bảo mật quyền riêng tư 100%",
+                loadingText: "Đang phân tích dữ liệu lượt xem, lượt thích và bài đã lưu, vui lòng đợi...",
+                modeAll: "Phân tích tất cả (Xem + Thích + Lưu)",
+                modeViews: "Lịch sử xem (Views)",
+                modeLikes: "Lịch sử thích (Likes)",
+                modeSaved: "Lịch sử lưu (Saved)",
+                metricTotalTitle: "Tổng số tương tác",
+                metricTotalSub: "Tổng điểm bản ghi ở chế độ hiện tại",
+                metricUniqueTitle: "Tổng tài khoản duy nhất",
+                metricUniqueSub: "Nhà sáng tạo / Trang đã tương tác",
+                metricTop10Title: "Tỷ trọng Top 10 cốt lõi",
+                metricTop10Sub: "Chỉ số mức độ tập trung nội dung",
+                metricActionTitle: "Tỷ lệ chuyển đổi Thích & Lưu",
+                metricActionSub: "(Thích + Lưu) / Tổng tương tác",
+                chartPieTitle: "Biểu đồ tròn Tỷ trọng Phân loại Chủ đề",
+                chartPieSub: "Phân bố chủ đề tài khoản dựa trên chế độ đang chọn",
+                chartBarTitle: "Biểu đồ cột Trọng số Tương tác Top 10",
+                chartBarSub: "Điểm trọng số và phân bố của 10 tài khoản hàng đầu",
+                tableTop10Title: "🏆 Top 10 Tài khoản Tương tác Cốt lõi",
+                tableTop10Sub: "10 tài khoản có tần suất tương tác cao nhất",
+                colRank: "Hạng",
+                colAccount: "Tên tài khoản",
+                colWeightScore: "Điểm trọng số",
+                tableCatTitle: "📊 Thống kê Chi tiết Phân loại Chủ đề",
+                tableCatSub: "Số lượng trọng số và tỷ lệ phần trăm từng nhóm",
+                colCategory: "Phân loại chủ đề",
+                colCount: "Số lượng",
+                colPercent: "Tỷ lệ (%)",
+                tableFullTitle: "🔍 Danh sách Chi tiết Tương tác Tất cả Tài khoản",
+                tableFullSub: "Phân tích chi tiết lượt xem, lượt thích và lượt lưu của từng tài khoản",
+                optAllCat: "Tất cả phân loại (All Categories)",
+                catPerf: "Biểu diễn & Cổ vũ",
+                catPhoto: "Nhiếp ảnh & Sáng tạo hình ảnh",
+                catSport: "Thể thao & Thể hình",
+                catBeauty: "Làm đẹp, Mỹ phẩm & Thời trang",
+                catFood: "Ẩm thực & Nhà hàng",
+                catStudy: "Kiến thức, Học tập & Tài chính",
+                catEnt: "Giải trí, Meme & Đời sống",
+                catOther: "Khác / Tài khoản cá nhân tổng hợp",
+                phSearch: "Tìm kiếm từ khóa tài khoản...",
+                colSmartCat: "Phân loại thông minh",
+                colView: "Lượt xem (View)",
+                colLike: "Lượt thích (Like)",
+                colSave: "Đã lưu (Save)",
+                colTotalWeight: "Tổng trọng số",
+                footerText: "Trình phân tích toàn diện dấu chân kỹ thuật số Instagram © 2026 | Hỗ trợ phân tích đa chiều Xem, Thích & Lưu",
+                scoreUnit: " điểm",
+                alertNoValidJson: "Không tìm thấy tệp JSON lượt xem, lượt thích hoặc bài đã lưu hợp lệ trong tệp ZIP.",
+                alertZipError: "Đã xảy ra lỗi khi đọc tệp ZIP, vui lòng kiểm tra lại định dạng tệp."
+            }
+        };
+
+        const categoryI18nMap = {
+            '表演類': { zh: '表演類', en: 'Performance & Cheerleading', vi: 'Biểu diễn & Cổ vũ' },
+            '攝影/影像創作類': { zh: '攝影/影像創作類', en: 'Photography & Visual Arts', vi: 'Nhiếp ảnh & Sáng tạo hình ảnh' },
+            '運動/健身類': { zh: '運動/健身類', en: 'Sports & Fitness', vi: 'Thể thao & Thể hình' },
+            '外貌美妝/穿搭類': { zh: '外貌美妝/穿搭類', en: 'Beauty, Makeup & Fashion', vi: 'Làm đẹp, Mỹ phẩm & Thời trang' },
+            '美食/餐飲類': { zh: '美食/餐飲類', en: 'Food & Dining', vi: 'Ẩm thực & Nhà hàng' },
+            '知識/學習/理財類': { zh: '知識/學習/理財類', en: 'Knowledge, Learning & Finance', vi: 'Kiến thức, Học tập & Tài chính' },
+            '娛樂/迷因/生活類': { zh: '娛樂/迷因/生活類', en: 'Entertainment, Memes & Lifestyle', vi: 'Giải trí, Meme & Đời sống' },
+            '其他/綜合個人帳號': { zh: '其他/綜合個人帳號', en: 'Other / General Personal Accounts', vi: 'Khác / Tài khoản cá nhân tổng hợp' }
+        };
+
+        let currentLang = 'zh';
+
+        function t(key) {
+            return (i18n[currentLang] && i18n[currentLang][key]) || i18n.zh[key] || key;
+        }
+
+        function translateCategory(catKey) {
+            return (categoryI18nMap[catKey] && categoryI18nMap[catKey][currentLang]) || catKey;
+        }
+
+        function setLanguage(lang) {
+            if (!i18n[lang]) return;
+            currentLang = lang;
+            document.documentElement.lang = t('htmlLang');
+            document.title = t('pageTitle');
+
+            ['zh', 'en', 'vi'].forEach(l => {
+                const btn = document.getElementById('lang-' + l);
+                if (btn) {
+                    if (l === lang) {
+                        btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-pink-600 shadow-xs transition-all";
+                    } else {
+                        btn.className = "px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all";
+                    }
+                }
+            });
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+
+            document.querySelectorAll('[data-i18n-html]').forEach(el => {
+                const key = el.getAttribute('data-i18n-html');
+                el.innerHTML = t(key);
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = t(key);
+            });
+
+            // 若儀表板已顯示，重新渲染表格與圖表以套用新語系
+            if (!document.getElementById('dashboardSection').classList.contains('hidden')) {
+                renderDashboard();
+                filterTable();
+            }
+        }
+
         // 資料儲存架構：分別記錄 view, like, save
         let aggregatedData = {}; 
         let currentMode = 'all'; // 'all', 'views', 'likes', 'saved'
@@ -282,7 +536,7 @@
         let doughnutChartInstance = null;
         let barChartInstance = null;
 
-        // 使用您提供的完整廣泛關鍵字庫
+        // 完整廣泛關鍵字庫
         const performanceKeywords = [
             'taishin_wonders','cheer', 'cheerleader', 'cheerleaders', 'gofans', 'girls', 'bbcrew', '啦啦隊', '應援', '女孩', 
             '棒球女孩', 'performance', 'dance', 'dancer', 'show', 'concert', 'stage', 'artist', 'theater', 'idol',
@@ -554,14 +808,14 @@
                 loadingIndicator.classList.add('hidden');
 
                 if (Object.keys(aggregatedData).length === 0) {
-                    alert('未能從 ZIP 檔案中找到有效的瀏覽、按讚或典藏 JSON 檔案。');
+                    alert(t('alertNoValidJson'));
                 } else {
                     renderDashboard();
                 }
             } catch (error) {
                 loadingIndicator.classList.add('hidden');
                 console.error(error);
-                alert('讀取 ZIP 檔案發生錯誤，請確認檔案格式。');
+                alert(t('alertZipError'));
             }
         }
 
@@ -718,7 +972,7 @@
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-semibold text-slate-500">#${index + 1}</td>
                     <td class="py-3 px-4 font-medium text-slate-900">@${item.account}</td>
-                    <td class="py-3 px-4 text-right font-semibold text-pink-600">${item.weight.toLocaleString()} 分</td>
+                    <td class="py-3 px-4 text-right font-semibold text-pink-600">${item.weight.toLocaleString()}${t('scoreUnit')}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -733,8 +987,8 @@
                 tr.className = 'hover:bg-slate-50 transition-colors';
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-medium text-slate-900 flex items-center space-x-2">
-                        <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${getCategoryColor(cat)}"></span>
-                        <span>${cat}</span>
+                        <span class="w-2.5 h-2.5 rounded-full inline-block shrink-0" style="background-color: ${getCategoryColor(cat)}"></span>
+                        <span>${translateCategory(cat)}</span>
                     </td>
                     <td class="py-3 px-4 text-right text-slate-700">${count.toLocaleString()}</td>
                     <td class="py-3 px-4 text-right font-semibold text-slate-900">${percentage}%</td>
@@ -754,7 +1008,7 @@
                     <td class="py-3 px-4 font-medium text-slate-900">@${item.account}</td>
                     <td class="py-3 px-4">
                         <span class="px-2.5 py-1 rounded-full text-xs font-medium" style="background-color: ${getCategoryColor(item.category)}20; color: ${getCategoryColor(item.category)}">
-                            ${item.category}
+                            ${translateCategory(item.category)}
                         </span>
                     </td>
                     <td class="py-3 px-4 text-center font-medium text-blue-600">${item.view}</td>
@@ -772,7 +1026,8 @@
             
             const filtered = globalProcessedList.filter(d => {
                 const matchesCategory = (selectedCategory === 'all' || d.category === selectedCategory);
-                const matchesQuery = d.account.toLowerCase().includes(query) || d.category.toLowerCase().includes(query);
+                const translatedCat = translateCategory(d.category).toLowerCase();
+                const matchesQuery = d.account.toLowerCase().includes(query) || d.category.toLowerCase().includes(query) || translatedCat.includes(query);
                 return matchesCategory && matchesQuery;
             });
 
@@ -796,10 +1051,12 @@
             const doughnutCtx = document.getElementById('categoryDoughnutChart').getContext('2d');
             if (doughnutChartInstance) doughnutChartInstance.destroy();
 
+            const translatedLabels = Object.keys(catCounts).map(cat => translateCategory(cat));
+
             doughnutChartInstance = new Chart(doughnutCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(catCounts),
+                    labels: translatedLabels,
                     datasets: [{
                         data: Object.values(catCounts),
                         backgroundColor: ['#ec4899', '#0284c7', '#10b981', '#e1306c', '#f09433', '#4f46e5', '#8b5cf6', '#64748b'],
@@ -825,7 +1082,7 @@
                 data: {
                     labels: top10.map(item => '@' + item.account),
                     datasets: [{
-                        label: '權重計分',
+                        label: t('colWeightScore'),
                         data: top10.map(item => item.weight),
                         backgroundColor: '#cc2366',
                         borderRadius: 6
@@ -848,6 +1105,7 @@
         }
 
         // 確保全域綁定與事件監聽順序
+        window.setLanguage = setLanguage;
         window.handleFileUpload = handleFileUpload;
         window.resetAnalysis = resetAnalysis;
         window.loadDemoData = loadDemoData;
